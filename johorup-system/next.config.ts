@@ -7,9 +7,6 @@ const nextConfig: NextConfig = {
   // Optimize for production
   reactStrictMode: true,
   
-  // Enable SWC minification
-  swcMinify: true,
-  
   // Image optimization
   images: {
     domains: [],
