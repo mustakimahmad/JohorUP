@@ -1,4 +1,5 @@
 [build]
+  base = "johorup-system"
   command = "npm run build"
   publish = ".next"
 
