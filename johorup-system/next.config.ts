@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Remove standalone for Netlify
+  // output: 'standalone',
   
   // Optimize for production
   reactStrictMode: true,
@@ -19,6 +20,9 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'JohorUP Dashboard',
   },
+  
+  // Netlify specific
+  distDir: '.next',
 };
 
 export default nextConfig;
