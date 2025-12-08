@@ -65,6 +65,7 @@ export interface Program {
   start_date: string;
   end_date: string;
   created_by: number;
+  target_students?: number; // Bilangan murid disasarkan (optional, diisi oleh Sektor Pembelajaran)
   subject?: Subject;
 }
 

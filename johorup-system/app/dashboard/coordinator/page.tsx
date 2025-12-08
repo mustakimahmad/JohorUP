@@ -1,326 +1,219 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { mockPrograms, mockBudget, mockDashboardStats } from '@/lib/mockData';
+import { useState } from 'react';
+import { mockPrograms, mockSubjects, mockBudget } from '@/lib/mockData';
 
-export default function CoordinatorDashboardPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [pendingApprovals, setPendingApprovals] = useState(mockBudget.filter(b => b.status === 'pending_approval'));
-  const [showGrantModal, setShowGrantModal] = useState(false);
-  const [selectedBudget, setSelectedBudget] = useState<any>(null);
+export default function CoordinatorPage() {
+  const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
+  const [targetStudents, setTargetStudents] = useState<{ [key: number]: number }>({});
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      router.push('/login');
-    } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      
-      // Redirect if not coordinator role
-      if (!parsedUser.email.includes('perancangan')) {
-        router.push('/dashboard');
-      }
-    }
-  }, [router]);
-
-  const totalBudget = 450000;
-  const approvedBudget = mockBudget
-    .filter(b => b.status === 'approved' || b.status === 'spent')
-    .reduce((sum, b) => sum + b.amount, 0);
-  const spentBudget = mockBudget
-    .filter(b => b.status === 'spent')
-    .reduce((sum, b) => sum + b.amount, 0);
-  const pendingBudget = mockBudget
-    .filter(b => b.status === 'pending_approval')
-    .reduce((sum, b) => sum + b.amount, 0);
-  const remainingBudget = totalBudget - approvedBudget;
-
-  const handleApprove = (budgetId: number) => {
-    setPendingApprovals(prev => prev.filter(b => b.id !== budgetId));
-    alert('Program telah diluluskan!');
+  const handleSaveTargetStudents = (programId: number) => {
+    // Dalam production, ini akan save ke database
+    alert(`Bilangan murid disasarkan untuk program ${programId}: ${targetStudents[programId] || 0} murid`);
   };
-
-  const handleReject = (budgetId: number) => {
-    setPendingApprovals(prev => prev.filter(b => b.id !== budgetId));
-    alert('Program telah ditolak.');
-  };
-
-  const handleDisburseGrant = (budget: any) => {
-    setSelectedBudget(budget);
-    setShowGrantModal(true);
-  };
-
-  const confirmDisbursement = () => {
-    alert(`Geran RM ${selectedBudget.amount.toLocaleString()} telah diturunkan untuk ${mockPrograms.find(p => p.id === selectedBudget.program_id)?.title}`);
-    setShowGrantModal(false);
-    setSelectedBudget(null);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
-
-  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard Koordinator</h1>
-            <p className="text-sm text-gray-600">Sektor Perancangan & Pengurusan PPD</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Log Keluar
-            </button>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <h1 className="text-2xl font-bold text-gray-900">Panel Sektor Pembelajaran</h1>
+          <p className="text-sm text-gray-600">Semakan dan kelulusan program</p>
         </div>
       </header>
 
-      {/* Navigation */}
       <nav className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
-            <a href="/dashboard/coordinator" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
+            <a href="/dashboard" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
               Dashboard
             </a>
-            <a href="/dashboard/coordinator/approvals" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Kelulusan Program
+            <a href="/dashboard/coordinator" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
+              Semakan Program
             </a>
-            <a href="/dashboard/coordinator/grants" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Pengeluaran Geran
+            <a href="/dashboard/programs" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
+              Program
             </a>
-            <a href="/dashboard" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Laporan Penuh
+            <a href="/dashboard/budget" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
+              Kewangan
             </a>
           </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Budget Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-lg shadow text-white">
-            <p className="text-sm opacity-90 mb-2">Jumlah Peruntukan</p>
-            <p className="text-2xl font-bold">RM {totalBudget.toLocaleString()}</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-lg shadow text-white">
-            <p className="text-sm opacity-90 mb-2">Diluluskan</p>
-            <p className="text-2xl font-bold">RM {approvedBudget.toLocaleString()}</p>
-            <p className="text-xs opacity-75 mt-1">{((approvedBudget/totalBudget)*100).toFixed(1)}%</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-lg shadow text-white">
-            <p className="text-sm opacity-90 mb-2">Dibelanjakan</p>
-            <p className="text-2xl font-bold">RM {spentBudget.toLocaleString()}</p>
-            <p className="text-xs opacity-75 mt-1">{((spentBudget/totalBudget)*100).toFixed(1)}%</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-6 rounded-lg shadow text-white">
-            <p className="text-sm opacity-90 mb-2">Menunggu Kelulusan</p>
-            <p className="text-2xl font-bold">RM {pendingBudget.toLocaleString()}</p>
-            <p className="text-xs opacity-75 mt-1">{pendingApprovals.length} program</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 rounded-lg shadow text-white">
-            <p className="text-sm opacity-90 mb-2">Baki</p>
-            <p className="text-2xl font-bold">RM {remainingBudget.toLocaleString()}</p>
-            <p className="text-xs opacity-75 mt-1">{((remainingBudget/totalBudget)*100).toFixed(1)}%</p>
-          </div>
-        </div>
-
-        {/* Pending Approvals Alert */}
-        {pendingApprovals.length > 0 && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  Anda mempunyai <span className="font-semibold">{pendingApprovals.length} program</span> yang menunggu kelulusan dengan jumlah <span className="font-semibold">RM {pendingBudget.toLocaleString()}</span>
-                </p>
-              </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start">
+            <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-semibold text-blue-900">Arahan untuk Sektor Pembelajaran</h3>
+              <p className="text-sm text-blue-800 mt-1">
+                Sila semak setiap program dan masukkan bilangan murid yang disasarkan untuk program tersebut. 
+                Maklumat ini akan digunakan untuk tracking dan laporan keberkesanan program.
+              </p>
             </div>
           </div>
-        )}
-
-        {/* Pending Approvals Table */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6 border-b flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Program Menunggu Kelulusan</h3>
-            <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">
-              {pendingApprovals.length} program
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Program</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penerangan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah (RM)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dikemukakan Oleh</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {pendingApprovals.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                      Tiada program menunggu kelulusan
-                    </td>
-                  </tr>
-                ) : (
-                  pendingApprovals.map((budget) => {
-                    const program = mockPrograms.find(p => p.id === budget.program_id);
-                    return (
-                      <tr key={budget.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                          {program?.title}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {budget.description}
-                        </td>
-                        <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                          {budget.amount.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          Sektor Pembelajaran
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleApprove(budget.id)}
-                              className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                            >
-                              Lulus
-                            </button>
-                            <button
-                              onClick={() => handleReject(budget.id)}
-                              className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                            >
-                              Tolak
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
 
-        {/* Approved Programs - Ready for Disbursement */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Program Diluluskan - Sedia Untuk Pengeluaran Geran</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Program</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah (RM)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarikh Lulus</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tindakan</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {mockBudget.filter(b => b.status === 'approved').map((budget) => {
-                  const program = mockPrograms.find(p => p.id === budget.program_id);
-                  return (
-                    <tr key={budget.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {program?.title}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                        {budget.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          Diluluskan
+        <div className="space-y-6">
+          {mockPrograms.map((program) => {
+            const subject = mockSubjects.find(s => s.id === program.target_subject_id);
+            const budget = mockBudget.find(b => b.program_id === program.id);
+            const isExpanded = selectedProgram === program.id;
+            
+            return (
+              <div key={program.id} className="bg-white rounded-lg shadow">
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{program.title}</h3>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                          {program.program_type}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {budget.approved_date ? new Date(budget.approved_date).toLocaleDateString('ms-MY') : '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleDisburseGrant(budget)}
-                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                        >
-                          Turunkan Geran
+                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                          {subject?.name}
+                        </span>
+                        {budget && (
+                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                            RM {budget.amount.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedProgram(isExpanded ? null : program.id)}
+                      className="ml-4 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      {isExpanded ? 'Tutup' : 'Semak'}
+                    </button>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 mb-4">{program.description}</p>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500">Tarikh Mula</p>
+                      <p className="font-medium text-gray-900">{new Date(program.start_date).toLocaleDateString('ms-MY')}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Tarikh Tamat</p>
+                      <p className="font-medium text-gray-900">{new Date(program.end_date).toLocaleDateString('ms-MY')}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Anggaran Kos</p>
+                      <p className="font-medium text-gray-900">RM {budget?.amount.toLocaleString() || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Murid Disasarkan</p>
+                      <p className="font-medium text-green-600">
+                        {program.target_students ? `${program.target_students} murid` : 'Belum ditetapkan'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Tetapkan Bilangan Murid Disasarkan</h4>
+                      
+                      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Bilangan Murid yang Disasarkan untuk Program Ini
+                        </label>
+                        <div className="flex gap-3">
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Contoh: 50"
+                            value={targetStudents[program.id] || program.target_students || ''}
+                            onChange={(e) => setTargetStudents({
+                              ...targetStudents,
+                              [program.id]: parseInt(e.target.value) || 0
+                            })}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                          <button
+                            onClick={() => handleSaveTargetStudents(program.id)}
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                          >
+                            Simpan
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          * Masukkan anggaran bilangan murid yang akan menyertai atau mendapat manfaat dari program ini
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <h5 className="text-sm font-semibold text-blue-900 mb-2">Maklumat Program</h5>
+                          <ul className="text-sm text-blue-800 space-y-1">
+                            <li>• Subjek: {subject?.name}</li>
+                            <li>• Jenis: {program.program_type}</li>
+                            <li>• Tempoh: {Math.ceil((new Date(program.end_date).getTime() - new Date(program.start_date).getTime()) / (1000 * 60 * 60 * 24))} hari</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <h5 className="text-sm font-semibold text-green-900 mb-2">Status Kelulusan</h5>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-green-800">Bajet:</span>
+                              <span className={`px-2 py-1 text-xs font-medium rounded ${
+                                budget?.status === 'approved' 
+                                  ? 'bg-green-200 text-green-900' 
+                                  : 'bg-yellow-200 text-yellow-900'
+                              }`}>
+                                {budget?.status === 'approved' ? 'Diluluskan' : 'Menunggu'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex gap-3">
+                        <button className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                          ✓ Luluskan Program
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <button className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-medium">
+                          ⚠ Minta Semakan Semula
+                        </button>
+                        <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium">
+                          ✗ Tolak
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Summary Card */}
+        <div className="mt-8 bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Ringkasan Program</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-3xl font-bold text-blue-600">{mockPrograms.length}</p>
+              <p className="text-sm text-gray-600 mt-1">Jumlah Program</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-3xl font-bold text-green-600">
+                {mockPrograms.reduce((sum, p) => sum + (p.target_students || 0), 0)}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">Jumlah Murid Disasarkan</p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-3xl font-bold text-purple-600">
+                RM {mockBudget.reduce((sum, b) => sum + b.amount, 0).toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">Jumlah Bajet</p>
+            </div>
           </div>
         </div>
       </main>
-
-      {/* Grant Disbursement Modal */}
-      {showGrantModal && selectedBudget && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Pengesahan Pengeluaran Geran</h3>
-            <div className="space-y-3 mb-6">
-              <div>
-                <p className="text-sm text-gray-600">Program:</p>
-                <p className="font-semibold text-gray-900">
-                  {mockPrograms.find(p => p.id === selectedBudget.program_id)?.title}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Jumlah Geran:</p>
-                <p className="text-2xl font-bold text-blue-600">RM {selectedBudget.amount.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Penerangan:</p>
-                <p className="text-sm text-gray-900">{selectedBudget.description}</p>
-              </div>
-            </div>
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-6">
-              <p className="text-xs text-yellow-800">
-                Pastikan semua dokumen sokongan telah lengkap sebelum menurunkan geran.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={confirmDisbursement}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Sahkan Pengeluaran
-              </button>
-              <button
-                onClick={() => setShowGrantModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-              >
-                Batal
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

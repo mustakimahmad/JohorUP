@@ -52,6 +52,7 @@ export const mockPrograms: Program[] = [
     start_date: '2026-01-15',
     end_date: '2026-03-30',
     created_by: 1,
+    target_students: 45, // Diisi oleh Sektor Pembelajaran
   },
   {
     id: 2,
@@ -62,6 +63,7 @@ export const mockPrograms: Program[] = [
     start_date: '2026-02-10',
     end_date: '2026-02-12',
     created_by: 1,
+    target_students: 60, // Diisi oleh Sektor Pembelajaran
   },
   {
     id: 3,
@@ -72,6 +74,7 @@ export const mockPrograms: Program[] = [
     start_date: '2026-01-20',
     end_date: '2026-08-30',
     created_by: 1,
+    target_students: 50, // Diisi oleh Sektor Pembelajaran
   },
 ];
 
