@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { mockPrograms, mockSubjects, mockBudget } from '@/lib/mockData';
+import { exportProgramSummaryToExcel, exportStudentsToExcel, exportProgressToExcel } from '@/lib/excelExport';
 
 export default function CoordinatorPage() {
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
@@ -15,9 +16,40 @@ export default function CoordinatorPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Panel Sektor Pembelajaran</h1>
-          <p className="text-sm text-gray-600">Semakan dan kelulusan program</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Panel Sektor Pembelajaran</h1>
+            <p className="text-sm text-gray-600">Semakan dan kelulusan program</p>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => exportProgramSummaryToExcel()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Program
+            </button>
+            <button 
+              onClick={() => exportStudentsToExcel()}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Murid
+            </button>
+            <button 
+              onClick={() => exportProgressToExcel()}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Analisis
+            </button>
+          </div>
         </div>
       </header>
 

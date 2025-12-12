@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mockStudents, mockGrades, mockSchools, mockSubjects } from '@/lib/mockData';
+import { exportProgressToExcel } from '@/lib/excelExport';
 
 export default function SchoolProgressPage() {
   const router = useRouter();
@@ -133,18 +134,29 @@ export default function SchoolProgressPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Subject Filter */}
         <div className="bg-white p-4 rounded-lg shadow mb-6">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Analisis mengikut subjek:</label>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">Analisis mengikut subjek:</label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Semua Subjek (Purata)</option>
+                {mockSubjects.map(subject => (
+                  <option key={subject.id} value={subject.id}>{subject.name}</option>
+                ))}
+              </select>
+            </div>
+            <button 
+              onClick={() => exportProgressToExcel(schoolId)}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
             >
-              <option value="all">Semua Subjek (Purata)</option>
-              {mockSubjects.map(subject => (
-                <option key={subject.id} value={subject.id}>{subject.name}</option>
-              ))}
-            </select>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download Excel
+            </button>
           </div>
         </div>
 

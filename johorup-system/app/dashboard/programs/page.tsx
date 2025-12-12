@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { mockPrograms, mockSubjects, mockBudget } from '@/lib/mockData';
+import { exportProgramSummaryToExcel } from '@/lib/excelExport';
 
 export default function ProgramsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -14,12 +15,23 @@ export default function ProgramsPage() {
             <h1 className="text-2xl font-bold text-gray-900">Program</h1>
             <p className="text-sm text-gray-600">Pengurusan program bimbingan dan aktiviti</p>
           </div>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-          >
-            + Tambah Program
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={() => exportProgramSummaryToExcel()}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download Excel
+            </button>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              + Tambah Program
+            </button>
+          </div>
         </div>
       </header>
 
