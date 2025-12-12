@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -33,8 +34,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">JohorUP</h1>
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
+          </div>
           <p className="text-gray-600 mt-2">Sistem Pemantauan Program SPM 2026</p>
+          <p className="text-sm text-gray-500 mt-1">Jabatan Pendidikan Negeri Johor</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">

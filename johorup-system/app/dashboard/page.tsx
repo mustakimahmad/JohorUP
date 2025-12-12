@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mockDashboardStats, mockPrograms, mockBudget } from '@/lib/mockData';
 import { exportStudentsToExcel, exportProgressToExcel, exportProgramSummaryToExcel } from '@/lib/excelExport';
+import DashboardHeader from '@/components/DashboardHeader';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -28,56 +29,45 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">JohorUP Dashboard</h1>
-            <p className="text-sm text-gray-600">Program Pemantauan SPM 2026</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-2">
-              <button 
-                onClick={() => exportProgramSummaryToExcel()}
-                className="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1"
-                title="Download Program Excel"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Program
-              </button>
-              <button 
-                onClick={() => exportStudentsToExcel()}
-                className="px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
-                title="Download Murid Excel"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Murid
-              </button>
-              <button 
-                onClick={() => exportProgressToExcel()}
-                className="px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
-                title="Download Analisis Excel"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Analisis
-              </button>
-            </div>
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Log Keluar
-            </button>
-          </div>
+      <DashboardHeader 
+        title="JohorUP Dashboard"
+        subtitle="Program Pemantauan SPM 2026"
+        user={user}
+        onLogout={handleLogout}
+      >
+        <div className="flex gap-2">
+          <button 
+            onClick={() => exportProgramSummaryToExcel()}
+            className="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1"
+            title="Download Program Excel"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Program
+          </button>
+          <button 
+            onClick={() => exportStudentsToExcel()}
+            className="px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
+            title="Download Murid Excel"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Murid
+          </button>
+          <button 
+            onClick={() => exportProgressToExcel()}
+            className="px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
+            title="Download Analisis Excel"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Analisis
+          </button>
         </div>
-      </header>
+      </DashboardHeader>
 
       {/* Navigation */}
       <nav className="bg-white border-b">
