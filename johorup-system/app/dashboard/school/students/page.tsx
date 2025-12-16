@@ -191,6 +191,7 @@ export default function SchoolStudentsPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matematik</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Purata</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tindakan</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -254,6 +255,14 @@ export default function SchoolStudentsPage() {
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(avgGrade)}`}>
                           {getStatusText(avgGrade)}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button 
+                          onClick={() => window.location.href = `/dashboard/students/${student.id}`}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                        >
+                          Lihat Detail
+                        </button>
                       </td>
                     </tr>
                   );

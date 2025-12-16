@@ -140,8 +140,11 @@ export default function StudentsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                          Lihat
+                        <button 
+                          onClick={() => window.location.href = `/dashboard/students/${student.id}`}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                        >
+                          Lihat Detail
                         </button>
                       </td>
                     </tr>
