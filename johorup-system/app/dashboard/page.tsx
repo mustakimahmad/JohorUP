@@ -35,62 +35,41 @@ export default function DashboardPage() {
         user={user}
         onLogout={handleLogout}
       >
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2 flex-wrap">
           <button 
             onClick={() => exportProgramSummaryToExcel()}
-            className="px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1"
+            className="px-2 sm:px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1 whitespace-nowrap"
             title="Download Program Excel"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Program
+            <span className="hidden sm:inline">Program</span>
           </button>
           <button 
             onClick={() => exportStudentsToExcel()}
-            className="px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
+            className="px-2 sm:px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1 whitespace-nowrap"
             title="Download Murid Excel"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Murid
+            <span className="hidden sm:inline">Murid</span>
           </button>
           <button 
             onClick={() => exportProgressToExcel()}
-            className="px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1"
+            className="px-2 sm:px-3 py-2 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-1 whitespace-nowrap"
             title="Download Analisis Excel"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Analisis
+            <span className="hidden sm:inline">Analisis</span>
           </button>
         </div>
       </DashboardHeader>
 
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <a href="/dashboard" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
-              Dashboard
-            </a>
-            <a href="/dashboard/students" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Murid
-            </a>
-            <a href="/dashboard/programs" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Program
-            </a>
-            <a href="/dashboard/budget" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Kewangan
-            </a>
-            <a href="/dashboard/reports" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Laporan
-            </a>
-          </div>
-        </div>
-      </nav>
+
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
