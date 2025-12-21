@@ -2,6 +2,7 @@
 
 import { createDatabaseTemplates } from '@/lib/createExcelTemplates';
 import DashboardHeader from '@/components/DashboardHeader';
+import NavigationBar from '@/components/NavigationBar';
 
 export default function AdminPage() {
   const handleDownloadTemplate = () => {
@@ -15,6 +16,8 @@ export default function AdminPage() {
         title="Admin Panel"
         subtitle="Database Template Generator"
       />
+
+      <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="bg-white rounded-lg shadow p-4 sm:p-8">

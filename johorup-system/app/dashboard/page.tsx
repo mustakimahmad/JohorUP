@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { mockDashboardStats, mockPrograms, mockBudget } from '@/lib/mockData';
 import { exportStudentsToExcel, exportProgressToExcel, exportProgramSummaryToExcel } from '@/lib/excelExport';
 import DashboardHeader from '@/components/DashboardHeader';
+import NavigationBar from '@/components/NavigationBar';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -68,6 +69,9 @@ export default function DashboardPage() {
           </button>
         </div>
       </DashboardHeader>
+
+      {/* Navigation Bar */}
+      <NavigationBar />
 
 
 

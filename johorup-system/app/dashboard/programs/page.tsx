@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { mockPrograms, mockSubjects, mockBudget } from '@/lib/mockData';
 import { exportProgramSummaryToExcel } from '@/lib/excelExport';
+import NavigationBar from '@/components/NavigationBar';
 
 export default function ProgramsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -35,24 +36,7 @@ export default function ProgramsPage() {
         </div>
       </header>
 
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <a href="/dashboard" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Dashboard
-            </a>
-            <a href="/dashboard/students" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Murid
-            </a>
-            <a href="/dashboard/programs" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
-              Program
-            </a>
-            <a href="/dashboard/budget" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Kewangan
-            </a>
-          </div>
-        </div>
-      </nav>
+      <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Add Program Form */}

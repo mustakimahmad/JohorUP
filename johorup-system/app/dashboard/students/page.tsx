@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { mockStudents, mockSchools, mockGrades, mockSubjects } from '@/lib/mockData';
 import { exportStudentsToExcel } from '@/lib/excelExport';
+import NavigationBar from '@/components/NavigationBar';
 
 export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,24 +40,7 @@ export default function StudentsPage() {
         </div>
       </header>
 
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <a href="/dashboard" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Dashboard
-            </a>
-            <a href="/dashboard/students" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
-              Murid
-            </a>
-            <a href="/dashboard/programs" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Program
-            </a>
-            <a href="/dashboard/budget" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Kewangan
-            </a>
-          </div>
-        </div>
-      </nav>
+      <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
