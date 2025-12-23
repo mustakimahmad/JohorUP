@@ -164,6 +164,11 @@ function determineGovRole(email: string) {
 // Helper function to check pre-registered users
 async function getUserRoleFromDatabase(email: string) {
   try {
+    // Skip database operations if no real database URL is provided
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+      return null
+    }
+    
     const result = await pool.query(`
       SELECT role, school_id, ppd_id 
       FROM users 
@@ -190,6 +195,12 @@ async function getUserRoleFromDatabase(email: string) {
 // Helper function to create user with role
 async function createUserWithRole(email: string, name: string, roleData: any) {
   try {
+    // Skip database operations if no real database URL is provided
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+      console.log(`📝 Demo mode: Would create user ${email} with role: ${roleData.role}`)
+      return { id: 1, email, name, role: roleData.role, school_id: roleData.school_id, ppd_id: roleData.ppd_id }
+    }
+    
     const result = await pool.query(`
       INSERT INTO users (email, name, role, school_id, ppd_id, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
@@ -213,6 +224,12 @@ async function createUserWithRole(email: string, name: string, roleData: any) {
 // Helper function to create pending user
 async function createPendingUser(email: string, name: string) {
   try {
+    // Skip database operations if no real database URL is provided
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+      console.log(`📝 Demo mode: Would create pending user ${email}`)
+      return
+    }
+    
     // Check if pending user already exists
     const existing = await pool.query(`
       SELECT id FROM users WHERE email = $1 AND role = 'pending_approval'
@@ -315,6 +332,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         try {
+          // Demo mode - use hardcoded users if no real database
+          if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+            // Demo users
+            const demoUsers = [
+              { id: 1, email: 'admin@jpnj.gov.my', name: 'Admin JPNJ', role: 'sektor_perancangan', school_id: null, ppd_id: null },
+              { id: 2, email: 'koordinator@jpnj.gov.my', name: 'Koordinator', role: 'sektor_perancangan', school_id: null, ppd_id: null },
+              { id: 3, email: 'ppd.jb@moe.gov.my', name: 'PPD Johor Bahru', role: 'ppd', school_id: null, ppd_id: 1 },
+              { id: 4, email: 'sekolah@moe-dl.edu.my', name: 'Sekolah Demo', role: 'school', school_id: 1, ppd_id: null },
+              { id: 5, email: 'yayasan@jcorp.com.my', name: 'Yayasan JCorp', role: 'yayasan_jcorp', school_id: null, ppd_id: null }
+            ]
+            
+            const user = demoUsers.find(u => u.email === credentials.email)
+            if (user && credentials.password === 'AdminPass123!') {
+              return {
+                id: user.id.toString(),
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                school_id: user.school_id,
+                ppd_id: user.ppd_id
+              }
+            }
+            return null
+          }
+
+          // Production mode - use database
           const result = await pool.query(
             'SELECT * FROM users WHERE email = $1',
             [credentials.email]
@@ -386,10 +429,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true
     },
     
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         try {
-          // Get fresh user details from database
+          // Demo mode - use user data directly
+          if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+            token.role = (user as any).role
+            token.school_id = (user as any).school_id
+            token.ppd_id = (user as any).ppd_id
+            token.user_id = parseInt(user.id || '1')
+            
+            // Add demo school/PPD names
+            if ((user as any).school_id) {
+              token.school_name = `SMK Demo ${(user as any).school_id}`
+            }
+            if ((user as any).ppd_id) {
+              token.ppd_name = `PPD Demo ${(user as any).ppd_id}`
+            }
+            
+            return token
+          }
+
+          // Production mode - get fresh user details from database
           const dbUser = await pool.query(
             'SELECT * FROM users WHERE email = $1',
             [user.email]
