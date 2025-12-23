@@ -9,22 +9,61 @@ const pool = new Pool({
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 })
 
-// Helper function to determine role from email pattern with MOE domains
-function determineRoleFromEmail(email: string) {
+// Testing version - Helper function to determine role from email pattern with test domains
+function determineRoleFromEmailTest(email: string) {
   const emailLower = email.toLowerCase()
+  
+  console.log(`🧪 Testing role detection for: ${emailLower}`)
+  
+  // TESTING PATTERNS (simulate MOE domains with Gmail accounts)
+  
+  // 1. SEKOLAH SIMULATION (@gmail.com with sekolah.test pattern)
+  if (emailLower.includes('sekolah.test') || emailLower.includes('smk.test')) {
+    return determineSchoolRoleTest(emailLower)
+  }
+  
+  // 2. PPD SIMULATION (@gmail.com with ppd.test pattern)
+  if (emailLower.includes('ppd.test')) {
+    return determineGovRoleTest(emailLower)
+  }
+  
+  // 3. JABATAN SIMULATION (@gmail.com with jabatan.test pattern)
+  if (emailLower.includes('jabatan.test') || emailLower.includes('koordinator.test')) {
+    return {
+      role: 'sektor_perancangan',
+      school_id: null,
+      ppd_id: null
+    }
+  }
+  
+  if (emailLower.includes('pembelajaran.test')) {
+    return {
+      role: 'sektor_pembelajaran',
+      school_id: null,
+      ppd_id: null
+    }
+  }
+  
+  // 4. YAYASAN SIMULATION (@gmail.com with yayasan.test pattern)
+  if (emailLower.includes('yayasan.test')) {
+    return {
+      role: 'yayasan_jcorp',
+      school_id: null,
+      ppd_id: null
+    }
+  }
+  
+  // 5. PRODUCTION MOE DOMAINS (for future real testing)
   const domain = emailLower.split('@')[1]
   
-  // 1. SEKOLAH DOMAIN (@moe-dl.edu.my) - All users are school users
   if (domain === 'moe-dl.edu.my') {
     return determineSchoolRole(emailLower)
   }
   
-  // 2. PPD & JABATAN DOMAIN (@moe.gov.my) - Government users
   if (domain === 'moe.gov.my') {
     return determineGovRole(emailLower)
   }
   
-  // 3. YAYASAN JCORP DOMAIN (@jcorp.com.my)
   if (domain === 'jcorp.com.my') {
     return {
       role: 'yayasan_jcorp',
@@ -33,7 +72,8 @@ function determineRoleFromEmail(email: string) {
     }
   }
   
-  // 4. UNAUTHORIZED DOMAIN
+  // 6. UNAUTHORIZED DOMAIN
+  console.log(`🚫 Unauthorized domain detected: ${domain}`)
   return {
     role: 'unauthorized',
     school_id: null,
@@ -41,53 +81,73 @@ function determineRoleFromEmail(email: string) {
   }
 }
 
-function determineSchoolRole(email: string) {
-  // All @moe-dl.edu.my users are school users
+function determineSchoolRoleTest(email: string) {
+  console.log(`🏫 Determining school role for: ${email}`)
+  
   let schoolId = null
   
-  // Extract school identifier from email
+  // Test patterns
   if (email.includes('smktjj') || email.includes('taman.johor.jaya')) {
     schoolId = 1 // SMK Taman Johor Jaya
   } else if (email.includes('smkbbuda') || email.includes('bandar.baru.uda')) {
     schoolId = 2 // SMK Bandar Baru UDA
   } else if (email.includes('smktu') || email.includes('taman.universiti')) {
     schoolId = 3 // SMK Taman Universiti
-  } else if (email.includes('smkskudai') || email.includes('skudai')) {
-    schoolId = 4 // SMK Skudai
-  } else if (email.includes('smkkulai') || email.includes('kulai')) {
-    schoolId = 5 // SMK Kulai
-  } else if (email.includes('smksenai') || email.includes('senai')) {
-    schoolId = 6 // SMK Senai
-  } else if (email.includes('smkgp') || email.includes('gelang.patah')) {
-    schoolId = 7 // SMK Gelang Patah
-  } else if (email.includes('smknusajaya') || email.includes('nusajaya')) {
-    schoolId = 8 // SMK Nusajaya
-  } else if (email.includes('smkmuar') || email.includes('muar')) {
-    schoolId = 9 // SMK Muar
-  } else if (email.includes('smktangkak') || email.includes('tangkak')) {
-    schoolId = 10 // SMK Tangkak
-  } else if (email.includes('smksegamat') || email.includes('segamat')) {
-    schoolId = 11 // SMK Segamat
-  } else if (email.includes('smkpagoh') || email.includes('pagoh')) {
-    schoolId = 12 // SMK Pagoh
-  } else if (email.includes('smkbg') || email.includes('bukit.gambir')) {
-    schoolId = 13 // SMK Bukit Gambir
-  } else if (email.includes('smkledang') || email.includes('ledang')) {
-    schoolId = 14 // SMK Ledang
-  } else if (email.includes('smkbp') || email.includes('batu.pahat')) {
-    schoolId = 15 // SMK Batu Pahat
-  } else if (email.includes('smkyp') || email.includes('yong.peng')) {
-    schoolId = 16 // SMK Yong Peng
-  } else if (email.includes('smkah') || email.includes('ayer.hitam')) {
-    schoolId = 17 // SMK Ayer Hitam
-  } else if (email.includes('smksenggarang') || email.includes('senggarang')) {
-    schoolId = 18 // SMK Senggarang
-  } else if (email.includes('smkrengit') || email.includes('rengit')) {
-    schoolId = 19 // SMK Rengit
-  } else if (email.includes('smkpr') || email.includes('parit.raja')) {
-    schoolId = 20 // SMK Parit Raja
   } else {
-    // Try to extract numeric school ID
+    // Default for testing
+    schoolId = 1
+  }
+  
+  console.log(`✅ School role assigned: school_id = ${schoolId}`)
+  
+  return {
+    role: 'school',
+    school_id: schoolId,
+    ppd_id: null
+  }
+}
+
+function determineGovRoleTest(email: string) {
+  console.log(`🏛️ Determining government role for: ${email}`)
+  
+  let ppdId = null
+  
+  // Test patterns
+  if (email.includes('jb') || email.includes('johor.bahru')) {
+    ppdId = 1 // PPD Johor Bahru
+  } else if (email.includes('muar')) {
+    ppdId = 2 // PPD Muar
+  } else if (email.includes('bp') || email.includes('batu.pahat')) {
+    ppdId = 3 // PPD Batu Pahat
+  } else {
+    // Default for testing
+    ppdId = 1
+  }
+  
+  console.log(`✅ PPD role assigned: ppd_id = ${ppdId}`)
+  
+  return {
+    role: 'ppd',
+    school_id: null,
+    ppd_id: ppdId
+  }
+}
+
+// Production functions (same as main auth.ts)
+function determineSchoolRole(email: string) {
+  let schoolId = null
+  
+  if (email.includes('smktjj') || email.includes('taman.johor.jaya')) {
+    schoolId = 1
+  } else if (email.includes('smkbbuda') || email.includes('bandar.baru.uda')) {
+    schoolId = 2
+  } else if (email.includes('smktu') || email.includes('taman.universiti')) {
+    schoolId = 3
+  } else if (email.includes('smkskudai') || email.includes('skudai')) {
+    schoolId = 4
+  } else if (email.includes('smkkulai') || email.includes('kulai')) {
+    schoolId = 5
+  } else {
     const schoolMatch = email.match(/smk(\d+)|sekolah(\d+)/)
     if (schoolMatch) {
       const extractedId = parseInt(schoolMatch[1] || schoolMatch[2])
@@ -99,36 +159,32 @@ function determineSchoolRole(email: string) {
   
   return {
     role: 'school',
-    school_id: schoolId || 1, // Default to first school if can't determine
+    school_id: schoolId || 1,
     ppd_id: null
   }
 }
 
 function determineGovRole(email: string) {
-  // PPD DETECTION
   if (email.includes('ppd')) {
     let ppdId = null
     
-    if (email.includes('jb') || email.includes('johor.bahru') || email.includes('johorbahru')) {
-      ppdId = 1 // PPD Johor Bahru
+    if (email.includes('jb') || email.includes('johor.bahru')) {
+      ppdId = 1
     } else if (email.includes('muar')) {
-      ppdId = 2 // PPD Muar
-    } else if (email.includes('bp') || email.includes('batu.pahat') || email.includes('batupahat')) {
-      ppdId = 3 // PPD Batu Pahat
+      ppdId = 2
+    } else if (email.includes('bp') || email.includes('batu.pahat')) {
+      ppdId = 3
     }
     
     return {
       role: 'ppd',
       school_id: null,
-      ppd_id: ppdId || 1 // Default to first PPD if can't determine
+      ppd_id: ppdId || 1
     }
   }
   
-  // JABATAN DETECTION
   if (email.includes('jpnj') || email.includes('jabatan')) {
-    // Determine specific role within Jabatan
-    if (email.includes('koordinator') || email.includes('coordinator') || 
-        email.includes('admin') || email.includes('pentadbir')) {
+    if (email.includes('koordinator') || email.includes('admin')) {
       return {
         role: 'sektor_perancangan',
         school_id: null,
@@ -136,8 +192,7 @@ function determineGovRole(email: string) {
       }
     }
     
-    if (email.includes('pembelajaran') || email.includes('academic') || 
-        email.includes('kurikulum') || email.includes('curriculum')) {
+    if (email.includes('pembelajaran') || email.includes('kurikulum')) {
       return {
         role: 'sektor_pembelajaran',
         school_id: null,
@@ -145,7 +200,6 @@ function determineGovRole(email: string) {
       }
     }
     
-    // Default jabatan role
     return {
       role: 'sektor_perancangan',
       school_id: null,
@@ -153,11 +207,10 @@ function determineGovRole(email: string) {
     }
   }
   
-  // If @moe.gov.my but not clearly PPD or Jabatan, default to PPD
   return {
     role: 'ppd',
     school_id: null,
-    ppd_id: 1 // Default to first PPD
+    ppd_id: 1
   }
 }
 
@@ -172,6 +225,7 @@ async function getUserRoleFromDatabase(email: string) {
     
     if (result.rows.length > 0) {
       const user = result.rows[0]
+      console.log(`👤 Found existing user: ${email} with role: ${user.role}`)
       return {
         role: user.role,
         school_id: user.school_id,
@@ -213,7 +267,6 @@ async function createUserWithRole(email: string, name: string, roleData: any) {
 // Helper function to create pending user
 async function createPendingUser(email: string, name: string) {
   try {
-    // Check if pending user already exists
     const existing = await pool.query(`
       SELECT id FROM users WHERE email = $1 AND role = 'pending_approval'
     `, [email])
@@ -231,20 +284,39 @@ async function createPendingUser(email: string, name: string) {
   }
 }
 
-// Main role determination function with MOE domain support
-async function determineUserRole(email: string, name: string, profile?: any) {
+// Main role determination function for testing
+async function determineUserRoleTest(email: string, name: string, profile?: any) {
+  console.log(`🧪 Starting role determination for: ${email}`)
+  
   // Step 1: Check if user already exists in database
   const existingUser = await getUserRoleFromDatabase(email)
   if (existingUser) {
-    console.log(`👤 Found existing user: ${email} with role: ${existingUser.role}`)
     return existingUser
   }
   
-  // Step 2: Validate domain first
+  // Step 2: Testing domain validation
   const domain = email.toLowerCase().split('@')[1]
-  const allowedDomains = ['moe-dl.edu.my', 'moe.gov.my', 'jcorp.com.my']
+  const allowedTestDomains = ['gmail.com', 'moe-dl.edu.my', 'moe.gov.my', 'jcorp.com.my']
   
-  if (!allowedDomains.includes(domain)) {
+  // For testing, allow Gmail with specific patterns
+  if (domain === 'gmail.com') {
+    const hasTestPattern = email.includes('.test') || 
+                          email.includes('sekolah.') || 
+                          email.includes('ppd.') || 
+                          email.includes('jabatan.') || 
+                          email.includes('yayasan.')
+    
+    if (!hasTestPattern) {
+      console.log(`🚫 Gmail account without test pattern: ${email}`)
+      await createPendingUser(email, name)
+      return { 
+        role: 'unauthorized', 
+        school_id: null, 
+        ppd_id: null, 
+        exists: false 
+      }
+    }
+  } else if (!allowedTestDomains.includes(domain)) {
     console.log(`🚫 Unauthorized domain: ${domain}`)
     await createPendingUser(email, name)
     return { 
@@ -255,11 +327,11 @@ async function determineUserRole(email: string, name: string, profile?: any) {
     }
   }
   
-  // Step 3: MOE domain-based role detection
-  const emailRole = determineRoleFromEmail(email)
+  // Step 3: Role detection
+  const emailRole = determineRoleFromEmailTest(email)
   
   if (emailRole.role === 'unauthorized') {
-    console.log(`⏳ Unauthorized domain, requires manual approval: ${email}`)
+    console.log(`⏳ Unauthorized, requires manual approval: ${email}`)
     await createPendingUser(email, name)
     return { 
       role: 'pending_approval', 
@@ -269,13 +341,11 @@ async function determineUserRole(email: string, name: string, profile?: any) {
     }
   }
   
-  // Step 4: Auto-approve for official MOE domains
-  if (domain === 'moe-dl.edu.my' || domain === 'moe.gov.my' || domain === 'jcorp.com.my') {
-    if (emailRole.role !== 'unknown') {
-      await createUserWithRole(email, name, emailRole)
-      console.log(`✅ Auto-approved ${domain} user: ${email} with role: ${emailRole.role}`)
-      return { ...emailRole, exists: false }
-    }
+  // Step 4: Auto-approve for valid patterns
+  if (emailRole.role !== 'unknown') {
+    await createUserWithRole(email, name, emailRole)
+    console.log(`✅ Auto-approved user: ${email} with role: ${emailRole.role}`)
+    return { ...emailRole, exists: false }
   }
   
   // Step 5: Manual approval for unclear patterns
@@ -297,8 +367,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorization: {
         params: {
           scope: 'openid email profile',
-          // Uncomment to restrict to specific domain
-          // hd: 'jpnj.gov.my'
         }
       }
     }),
@@ -360,21 +428,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         try {
-          // Determine user role using hybrid strategy
-          const roleData = await determineUserRole(
+          console.log(`🧪 Testing Google sign-in for: ${user.email}`)
+          
+          // Use testing role determination
+          const roleData = await determineUserRoleTest(
             user.email!,
             user.name!,
             profile
           )
           
-          // Reject if pending approval
+          // Reject if unauthorized
+          if (roleData.role === 'unauthorized') {
+            console.log(`🚫 Login rejected - unauthorized: ${user.email}`)
+            return false
+          }
+          
+          // Redirect to pending approval if needed
           if (roleData.role === 'pending_approval') {
-            console.log(`🚫 Login rejected - pending approval: ${user.email}`)
-            // You could redirect to a pending approval page here
+            console.log(`⏳ Login redirected - pending approval: ${user.email}`)
             return '/auth/pending-approval'
           }
           
           // Allow login for approved roles
+          console.log(`✅ Login approved for: ${user.email} with role: ${roleData.role}`)
           return true
           
         } catch (error) {
@@ -470,26 +546,4 @@ export async function requireRole(allowedRoles: string[]) {
     throw new Error('Insufficient permissions')
   }
   return user
-}
-
-// Admin function to approve pending users
-export async function approveUser(email: string, roleData: { role: string, school_id?: number, ppd_id?: number }) {
-  try {
-    const result = await pool.query(`
-      UPDATE users 
-      SET role = $1, school_id = $2, ppd_id = $3, updated_at = NOW()
-      WHERE email = $4 AND role = 'pending_approval'
-      RETURNING *
-    `, [roleData.role, roleData.school_id, roleData.ppd_id, email])
-    
-    if (result.rows.length > 0) {
-      console.log(`✅ Approved user: ${email} with role: ${roleData.role}`)
-      return result.rows[0]
-    }
-    
-    throw new Error('User not found or already approved')
-  } catch (error) {
-    console.error('Error approving user:', error)
-    throw error
-  }
 }

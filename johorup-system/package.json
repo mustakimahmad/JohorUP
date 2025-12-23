@@ -12,8 +12,10 @@
     "deploy:vercel": "bash scripts/deploy-production.sh vercel",
     "deploy:docker": "bash scripts/deploy-production.sh docker",
     "deploy:netlify": "bash scripts/setup-netlify.sh",
+    "deploy:netlify-neon": "bash scripts/setup-netlify-neon.sh",
     "import:data": "node scripts/import-production-data.js",
     "import:supabase": "node scripts/import-supabase-data.js",
+    "import:neon": "node scripts/import-neon-data.js",
     "backup:db": "pg_dump $DATABASE_URL > backups/backup_$(date +%Y%m%d_%H%M%S).sql",
     "health-check": "curl -f http://localhost:3000/api/health || exit 1"
   },
@@ -22,7 +24,12 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "recharts": "^3.5.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "next-auth": "^5.0.0-beta.25",
+    "pg": "^8.11.3",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.0.1",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.3",
@@ -30,6 +37,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/pg": "^8.10.9",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/multer": "^1.4.11",
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",

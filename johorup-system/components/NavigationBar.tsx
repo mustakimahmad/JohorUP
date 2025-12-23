@@ -46,7 +46,24 @@ export default function NavigationBar() {
       ];
     }
 
-    // For other roles (ppd, sektor_pembelajaran, sektor_perancangan)
+    // Super Admin (admin emails in sektor_perancangan)
+    if (user.role === 'sektor_perancangan' && (user.email?.includes('admin') || user.email?.includes('koordinator'))) {
+      return [
+        ...baseItems,
+        { href: '/dashboard/super-admin', label: '👑 Super Admin' },
+        { href: '/dashboard/admin/user-management', label: 'User Management' },
+        { href: '/dashboard/students', label: 'Murid' },
+        { href: '/dashboard/teachers', label: 'Guru' },
+        { href: '/dashboard/programs', label: 'Program' },
+        { href: '/dashboard/calendar', label: 'Kalendar' },
+        { href: '/dashboard/tuition-analysis', label: 'Analisis Tuisyen' },
+        { href: '/dashboard/budget', label: 'Kewangan' },
+        { href: '/dashboard/reports', label: 'Laporan' },
+        { href: '/dashboard/maintenance-control', label: 'Kawalan Penyelenggaraan' },
+      ];
+    }
+
+    // For other roles (ppd, sektor_pembelajaran, regular sektor_perancangan)
     const otherRoleItems = [
       ...baseItems,
       { href: '/dashboard/students', label: 'Murid' },
