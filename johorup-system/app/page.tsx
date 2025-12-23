@@ -88,10 +88,12 @@ export default function Home() {
             {/* Yayasan JCorp - Leader */}
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl shadow-lg">
               <div className="text-center">
-                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
+                <div className="w-32 h-16 mx-auto mb-6 flex items-center justify-center">
+                  <img 
+                    src="/yayasan-jcorp-logo.svg" 
+                    alt="Yayasan JCorp Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <h3 className="text-2xl font-bold text-blue-900 mb-3">Yayasan JCorp</h3>
                 <p className="text-blue-800 font-semibold mb-4">PENERAJU PROGRAM</p>
@@ -106,10 +108,12 @@ export default function Home() {
             {/* Yayasan Hasanah - Funder */}
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl shadow-lg">
               <div className="text-center">
-                <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="w-40 h-20 mx-auto mb-6 flex items-center justify-center">
+                  <img 
+                    src="/yayasan-hasanah-logo.svg" 
+                    alt="Yayasan Hasanah Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <h3 className="text-2xl font-bold text-green-900 mb-3">Yayasan Hasanah</h3>
                 <p className="text-green-800 font-semibold mb-4">PEMBIAYA UTAMA</p>
@@ -265,7 +269,13 @@ export default function Home() {
             
             <div>
               <h4 className="text-lg font-semibold mb-4">Peneraju Program</h4>
-              <p className="text-gray-400 text-sm mb-2">Yayasan JCorp</p>
+              <div className="flex items-center space-x-3 mb-2">
+                <img 
+                  src="/yayasan-jcorp-logo.svg" 
+                  alt="Yayasan JCorp Logo" 
+                  className="w-16 h-8 object-contain"
+                />
+              </div>
               <p className="text-gray-400 text-sm">Memimpin transformasi pendidikan di Johor</p>
             </div>
             
