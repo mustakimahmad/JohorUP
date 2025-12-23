@@ -4,10 +4,14 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { Pool } from 'pg'
 import bcrypt from 'bcryptjs'
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/johorup_demo',
-  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
-})
+// Only create pool if we have a real database URL
+let pool: Pool | null = null
+if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost')) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  })
+}
 
 // Helper function to determine role from email pattern with MOE domains
 function determineRoleFromEmail(email: string) {
@@ -164,8 +168,8 @@ function determineGovRole(email: string) {
 // Helper function to check pre-registered users
 async function getUserRoleFromDatabase(email: string) {
   try {
-    // Skip database operations if no real database URL is provided
-    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+    // Skip database operations if no pool available
+    if (!pool) {
       return null
     }
     
@@ -195,8 +199,8 @@ async function getUserRoleFromDatabase(email: string) {
 // Helper function to create user with role
 async function createUserWithRole(email: string, name: string, roleData: any) {
   try {
-    // Skip database operations if no real database URL is provided
-    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+    // Skip database operations if no pool available
+    if (!pool) {
       console.log(`📝 Demo mode: Would create user ${email} with role: ${roleData.role}`)
       return { id: 1, email, name, role: roleData.role, school_id: roleData.school_id, ppd_id: roleData.ppd_id }
     }
@@ -224,8 +228,8 @@ async function createUserWithRole(email: string, name: string, roleData: any) {
 // Helper function to create pending user
 async function createPendingUser(email: string, name: string) {
   try {
-    // Skip database operations if no real database URL is provided
-    if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+    // Skip database operations if no pool available
+    if (!pool) {
       console.log(`📝 Demo mode: Would create pending user ${email}`)
       return
     }
@@ -332,8 +336,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         try {
-          // Demo mode - use hardcoded users if no real database
-          if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+          // Demo mode - use hardcoded users if no pool available
+          if (!pool) {
             // Demo users
             const demoUsers = [
               { id: 1, email: 'admin@jpnj.gov.my', name: 'Admin JPNJ', role: 'sektor_perancangan', school_id: null, ppd_id: null },
@@ -433,7 +437,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         try {
           // Demo mode - use user data directly
-          if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost')) {
+          if (!pool) {
             token.role = (user as any).role
             token.school_id = (user as any).school_id
             token.ppd_id = (user as any).ppd_id
@@ -537,6 +541,11 @@ export async function requireRole(allowedRoles: string[]) {
 // Admin function to approve pending users
 export async function approveUser(email: string, roleData: { role: string, school_id?: number, ppd_id?: number }) {
   try {
+    if (!pool) {
+      console.log(`📝 Demo mode: Would approve user ${email} with role: ${roleData.role}`)
+      return { id: 1, email, role: roleData.role, school_id: roleData.school_id, ppd_id: roleData.ppd_id }
+    }
+    
     const result = await pool.query(`
       UPDATE users 
       SET role = $1, school_id = $2, ppd_id = $3, updated_at = NOW()
