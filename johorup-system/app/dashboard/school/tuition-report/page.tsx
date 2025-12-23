@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { mockPrograms, mockSubjects, mockSchools, mockStudents, mockTeachers } from '@/lib/mockData';
 import DashboardHeader from '@/components/DashboardHeader';
 import NavigationBar from '@/components/NavigationBar';
+import MaintenanceCheck, { useMaintenanceMode } from '@/components/MaintenanceCheck';
 
 export default function TuitionReportPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [showReportForm, setShowReportForm] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
+  const { isMaintenanceMode, canUpdate, isReadOnlyMode } = useMaintenanceMode();
 
   // Form states
   const [formData, setFormData] = useState({
@@ -106,6 +108,12 @@ export default function TuitionReportPage() {
   ];
 
   const handleSubmitReport = () => {
+    // Check if updates are allowed during maintenance
+    if (!canUpdate(user?.role)) {
+      alert('Sistem sedang dalam mod penyelenggaraan. Kemaskini data tidak dibenarkan buat masa ini.');
+      return;
+    }
+
     // Validate required fields
     const studentsPresent = Object.values(selectedStudents).filter(Boolean).length;
     
@@ -173,7 +181,8 @@ export default function TuitionReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <MaintenanceCheck userRole={user?.role}>
+      <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
         title="Laporan"
         subtitle="Laporan pelaksanaan tuisyen oleh guru dengan bukti dan gambar"
@@ -184,6 +193,21 @@ export default function TuitionReportPage() {
       <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Maintenance Mode Banner */}
+        {isReadOnlyMode(user?.role) && (
+          <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <p className="text-orange-800 font-medium">Sistem Dalam Mod Penyelenggaraan</p>
+                <p className="text-orange-700 text-sm">Kemaskini data tidak dibenarkan buat masa ini. Anda hanya boleh melihat data sedia ada.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -192,7 +216,12 @@ export default function TuitionReportPage() {
           </div>
           <button
             onClick={() => setShowReportForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            disabled={!canUpdate(user?.role)}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+              canUpdate(user?.role) 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+            }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -725,5 +754,6 @@ export default function TuitionReportPage() {
         )}
       </main>
     </div>
+    </MaintenanceCheck>
   );
 }

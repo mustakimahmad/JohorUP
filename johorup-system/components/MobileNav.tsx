@@ -50,7 +50,7 @@ export default function MobileNav({ currentPath }: MobileNavProps) {
     }
 
     // For other roles (ppd, sektor_pembelajaran, sektor_perancangan)
-    return [
+    const otherRoleItems = [
       ...baseItems,
       { href: '/dashboard/students', label: 'Murid' },
       { href: '/dashboard/teachers', label: 'Guru' },
@@ -60,6 +60,13 @@ export default function MobileNav({ currentPath }: MobileNavProps) {
       { href: '/dashboard/budget', label: 'Kewangan' },
       { href: '/dashboard/reports', label: 'Laporan' },
     ];
+
+    // Add maintenance control for coordinators
+    if (user.role === 'sektor_perancangan') {
+      otherRoleItems.push({ href: '/dashboard/maintenance-control', label: 'Kawalan Penyelenggaraan' });
+    }
+
+    return otherRoleItems;
   };
 
   const navItems = getNavItems();
