@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { requireSuperAdmin } from '@/lib/auth'
 
 interface SystemHealth {
   status: 'healthy' | 'warning' | 'critical'
@@ -18,6 +17,7 @@ interface QuickStats {
   totalStudents: number
   totalTeachers: number
   totalReports: number
+  totalUsers: number
   pendingApprovals: number
   systemAlerts: number
 }
@@ -38,6 +38,7 @@ export default function SuperAdminDashboard() {
     totalStudents: 880,
     totalTeachers: 120,
     totalReports: 156,
+    totalUsers: 127,
     pendingApprovals: 3,
     systemAlerts: 1
   })

@@ -44,7 +44,7 @@ export default auth((req) => {
     }
     
     // Role-based access control
-    const userRole = req.auth.user?.role
+    const userRole = (req.auth.user as any)?.role
     
     // Admin routes - only for admin roles
     if (pathname.startsWith('/dashboard/admin')) {

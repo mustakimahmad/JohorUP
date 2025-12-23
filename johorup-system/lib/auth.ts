@@ -297,8 +297,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorization: {
         params: {
           scope: 'openid email profile',
-          // Uncomment to restrict to specific domain
-          // hd: 'jpnj.gov.my'
         }
       }
     }),
@@ -327,7 +325,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Check if user has password_hash (for manual accounts)
           if (user.password_hash) {
             const isValidPassword = await bcrypt.compare(
-              credentials.password,
+              credentials.password as string,
               user.password_hash
             )
 
@@ -370,7 +368,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Reject if pending approval
           if (roleData.role === 'pending_approval') {
             console.log(`🚫 Login rejected - pending approval: ${user.email}`)
-            // You could redirect to a pending approval page here
             return '/auth/pending-approval'
           }
           
@@ -428,13 +425,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     
     async session({ session, token }) {
       // Add custom fields to session
-      if (token) {
-        session.user.role = token.role as string
-        session.user.school_id = token.school_id as number
-        session.user.ppd_id = token.ppd_id as number
-        session.user.user_id = token.user_id as number
-        session.user.school_name = token.school_name as string
-        session.user.ppd_name = token.ppd_name as string
+      if (token && session.user) {
+        (session.user as any).role = token.role as string
+        ;(session.user as any).school_id = token.school_id as number
+        ;(session.user as any).ppd_id = token.ppd_id as number
+        ;(session.user as any).user_id = token.user_id as number
+        ;(session.user as any).school_name = token.school_name as string
+        ;(session.user as any).ppd_name = token.ppd_name as string
       }
       return session
     }
@@ -466,7 +463,7 @@ export async function requireAuth() {
 
 export async function requireRole(allowedRoles: string[]) {
   const user = await requireAuth()
-  if (!allowedRoles.includes(user.role)) {
+  if (!allowedRoles.includes((user as any).role)) {
     throw new Error('Insufficient permissions')
   }
   return user
