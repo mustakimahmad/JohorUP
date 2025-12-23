@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { mockDashboardStats, mockPrograms, mockBudget, mockTeachers, mockTeacherKPIs } from '@/lib/mockData';
