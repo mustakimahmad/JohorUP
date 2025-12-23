@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { mockDashboardStats, mockPrograms, mockBudget, mockTeachers, mockTeacherKPIs } from '@/lib/mockData';
 import { exportStudentsToExcel, exportProgressToExcel, exportProgramSummaryToExcel } from '@/lib/excelExport';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -9,24 +10,34 @@ import NavigationBar from '@/components/NavigationBar';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { data: session, status } = useSession();
   const stats = mockDashboardStats;
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    if (status === 'loading') return; // Still loading
+    if (!session) {
       router.push('/login');
-    } else {
-      setUser(JSON.parse(userData));
     }
-  }, [router]);
+  }, [session, status, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    router.push('/login');
+    router.push('/api/auth/signout');
   };
 
-  if (!user) return null;
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
+  const user = session.user;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,7 +49,7 @@ export default function DashboardPage() {
       >
         <div className="flex gap-1 sm:gap-2 flex-wrap">
           {/* Admin Template Link - Only for Koordinator */}
-          {user.email === 'koordinator@jpnj.gov.my' && (
+          {(user as any).role === 'sektor_perancangan' && (
             <button 
               onClick={() => router.push('/dashboard/admin')}
               className="px-2 sm:px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-1 whitespace-nowrap"
