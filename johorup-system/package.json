@@ -11,7 +11,9 @@
     "deploy:production": "bash scripts/deploy-production.sh",
     "deploy:vercel": "bash scripts/deploy-production.sh vercel",
     "deploy:docker": "bash scripts/deploy-production.sh docker",
+    "deploy:netlify": "bash scripts/setup-netlify.sh",
     "import:data": "node scripts/import-production-data.js",
+    "import:supabase": "node scripts/import-supabase-data.js",
     "backup:db": "pg_dump $DATABASE_URL > backups/backup_$(date +%Y%m%d_%H%M%S).sql",
     "health-check": "curl -f http://localhost:3000/api/health || exit 1"
   },
