@@ -1,15 +1,16 @@
-import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
   
   // Public routes that don't require authentication
   const publicRoutes = [
     '/',
     '/login',
     '/auth/error',
-    '/auth/pending-approval'
+    '/auth/pending-approval',
+    '/maintenance'
   ]
   
   // API routes that don't require authentication
@@ -35,57 +36,10 @@ export default auth((req) => {
     return NextResponse.next()
   }
   
-  // Protected routes - require authentication
-  if (pathname.startsWith('/dashboard')) {
-    if (!req.auth) {
-      const loginUrl = new URL('/login', req.url)
-      loginUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(loginUrl)
-    }
-    
-    // Role-based access control
-    const userRole = (req.auth.user as any)?.role
-    
-    // Admin routes - only for admin roles
-    if (pathname.startsWith('/dashboard/admin')) {
-      const adminRoles = ['sektor_perancangan', 'sektor_pembelajaran']
-      if (!adminRoles.includes(userRole)) {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
-    }
-    
-    // School routes - only for school role
-    if (pathname.startsWith('/dashboard/school')) {
-      if (userRole !== 'school') {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
-    }
-    
-    // PPD routes - only for PPD role
-    if (pathname.startsWith('/dashboard/ppd')) {
-      if (userRole !== 'ppd') {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
-    }
-    
-    // Yayasan routes - only for Yayasan JCorp role
-    if (pathname.startsWith('/dashboard/yayasan')) {
-      if (userRole !== 'yayasan_jcorp') {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
-    }
-    
-    // Maintenance control - only for coordinators
-    if (pathname.startsWith('/dashboard/maintenance-control')) {
-      const coordinatorRoles = ['sektor_perancangan']
-      if (!coordinatorRoles.includes(userRole)) {
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
-    }
-  }
-  
+  // For protected routes, let NextAuth handle authentication
+  // This middleware will just handle basic routing
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [
