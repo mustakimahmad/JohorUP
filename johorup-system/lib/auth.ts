@@ -5,7 +5,7 @@ import { Pool } from 'pg'
 import bcrypt from 'bcryptjs'
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/johorup_demo',
   ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
 })
 
@@ -291,15 +291,18 @@ async function determineUserRole(email: string, name: string, profile?: any) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: 'openid email profile',
+    // Google SSO - only enable if environment variables are set
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
+      GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        authorization: {
+          params: {
+            scope: 'openid email profile',
+          }
         }
-      }
-    }),
+      })
+    ] : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -444,6 +447,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24 hours
   },
+  secret: process.env.NEXTAUTH_SECRET || 'demo-secret-key-for-development-only',
   debug: process.env.NODE_ENV === 'development'
 })
 
