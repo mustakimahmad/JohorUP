@@ -38,8 +38,8 @@ export default function AdminPage() {
             </p>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 text-left">
-              <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-3 sm:mb-4">Template mengandungi 8 sheets:</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-blue-900 mb-3 sm:mb-4">Template mengandungi 10 sheets:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div className="bg-white p-2 sm:p-3 rounded border">
                   <div className="font-medium text-blue-800">PPD</div>
                   <div className="text-gray-600 text-xs">Pejabat Pendidikan Daerah</div>
@@ -59,6 +59,14 @@ export default function AdminPage() {
                 <div className="bg-white p-2 sm:p-3 rounded border">
                   <div className="font-medium text-blue-800">StudentGrades</div>
                   <div className="text-gray-600 text-xs">Markah Murid</div>
+                </div>
+                <div className="bg-white p-2 sm:p-3 rounded border">
+                  <div className="font-medium text-blue-800">Teachers</div>
+                  <div className="text-gray-600 text-xs">Profil Guru</div>
+                </div>
+                <div className="bg-white p-2 sm:p-3 rounded border">
+                  <div className="font-medium text-blue-800">TeacherKPIs</div>
+                  <div className="text-gray-600 text-xs">KPI Pencerapan PdP</div>
                 </div>
                 <div className="bg-white p-2 sm:p-3 rounded border">
                   <div className="font-medium text-blue-800">Users</div>

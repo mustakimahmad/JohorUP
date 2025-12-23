@@ -15,14 +15,58 @@ export default function LoginPage() {
     
     // Mock login - guna demo123 sebagai password
     if (password === 'demo123') {
-      localStorage.setItem('user', JSON.stringify({ email }));
+      // Determine user role and other info based on email
+      let userData: any = { email };
       
-      // Redirect based on role
       if (email.includes('sekolah')) {
+        userData = {
+          email,
+          role: 'school',
+          name: 'Guru Besar SMK TJJ',
+          school_id: 1
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
         router.push('/dashboard/school');
-      } else if (email.includes('perancangan')) {
+      } else if (email.includes('ppd')) {
+        userData = {
+          email,
+          role: 'ppd',
+          name: 'Pegawai PPD JB',
+          ppd_id: 1
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        router.push('/dashboard');
+      } else if (email.includes('pembelajaran')) {
+        userData = {
+          email,
+          role: 'sektor_pembelajaran',
+          name: 'Ketua Sektor Pembelajaran'
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        router.push('/dashboard');
+      } else if (email.includes('koordinator') || email.includes('perancangan')) {
+        userData = {
+          email,
+          role: 'sektor_perancangan',
+          name: 'Koordinator Program JohorUP'
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
         router.push('/dashboard/coordinator');
+      } else if (email.includes('yayasan') || email.includes('jcorp')) {
+        userData = {
+          email,
+          role: 'yayasan_jcorp',
+          name: 'Pegawai Yayasan JCorp'
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
+        router.push('/dashboard');
       } else {
+        userData = {
+          email,
+          role: 'sektor_pembelajaran',
+          name: 'Pengguna Sistem'
+        };
+        localStorage.setItem('user', JSON.stringify(userData));
         router.push('/dashboard');
       }
     } else {
@@ -91,6 +135,7 @@ export default function LoginPage() {
             <p>🏢 PPD: ppd.jb@moe.gov.my</p>
             <p>📚 Sektor Pembelajaran: pembelajaran@jpnj.gov.my</p>
             <p>⭐ Koordinator: koordinator@jpnj.gov.my</p>
+            <p>🏛️ Yayasan JCorp: yayasan@jcorp.com.my</p>
             <p className="mt-2 font-semibold text-blue-600">Password: demo123</p>
           </div>
         </div>

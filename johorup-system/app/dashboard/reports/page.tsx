@@ -1,6 +1,6 @@
 'use client';
 
-import { mockDashboardStats, mockSchools, mockStudents, mockGrades } from '@/lib/mockData';
+import { mockSchools, mockStudents, mockGrades } from '@/lib/mockData';
 import NavigationBar from '@/components/NavigationBar';
 
 export default function ReportsPage() {
@@ -15,7 +15,7 @@ export default function ReportsPage() {
     
     return {
       totalStudents: students.length,
-      passingRate: grades.length > 0 ? (passing.length / grades.length * 100).toFixed(1) : 0
+      passingRate: grades.length > 0 ? parseFloat((passing.length / grades.length * 100).toFixed(1)) : 0
     };
   };
 
@@ -177,7 +177,6 @@ export default function ReportsPage() {
               <tbody className="divide-y divide-gray-200">
                 {mockSchools.map((school) => {
                   const stats = calculateSchoolStats(school.id);
-                  const performance = parseFloat(stats.passingRate.toString());
                   
                   return (
                     <tr key={school.id} className="hover:bg-gray-50">
@@ -195,20 +194,20 @@ export default function ReportsPage() {
                           <div className="w-32 bg-gray-200 rounded-full h-2 mr-2">
                             <div 
                               className={`h-2 rounded-full ${
-                                performance >= 50 ? 'bg-green-500' :
-                                performance >= 40 ? 'bg-yellow-500' :
+                                stats.passingRate >= 50 ? 'bg-green-500' :
+                                stats.passingRate >= 40 ? 'bg-yellow-500' :
                                 'bg-red-500'
                               }`}
-                              style={{ width: `${performance}%` }}
+                              style={{ width: `${stats.passingRate}%` }}
                             ></div>
                           </div>
                           <span className={`text-xs font-medium ${
-                            performance >= 50 ? 'text-green-600' :
-                            performance >= 40 ? 'text-yellow-600' :
+                            stats.passingRate >= 50 ? 'text-green-600' :
+                            stats.passingRate >= 40 ? 'text-yellow-600' :
                             'text-red-600'
                           }`}>
-                            {performance >= 50 ? 'Baik' :
-                             performance >= 40 ? 'Sederhana' :
+                            {stats.passingRate >= 50 ? 'Baik' :
+                             stats.passingRate >= 40 ? 'Sederhana' :
                              'Perlu Perhatian'}
                           </span>
                         </div>

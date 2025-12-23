@@ -1,6 +1,6 @@
 // TypeScript types untuk sistem JohorUP
 
-export type UserRole = 'school' | 'ppd' | 'sektor_pembelajaran' | 'sektor_perancangan';
+export type UserRole = 'school' | 'ppd' | 'sektor_pembelajaran' | 'sektor_perancangan' | 'yayasan_jcorp';
 
 export type ExamType = 'akhir_tingkatan_4' | 'pertengahan_tahun' | 'percubaan' | 'spm';
 
@@ -100,4 +100,67 @@ export interface DashboardStats {
     sejarah: number;
     matematik: number;
   };
+}
+
+export interface Teacher {
+  id: number;
+  name: string;
+  ic_number: string;
+  school_id: number;
+  subject_id: number;
+  years_experience: number;
+  qualification: string;
+  phone: string;
+  email: string;
+  school?: School;
+  subject?: Subject;
+}
+
+export interface TeacherKPI {
+  id: number;
+  teacher_id: number;
+  assessment_date: string;
+  pdp_score: number; // Skor Pencerapan PdP (0-100)
+  assessed_by_ppd: number; // PPD yang menilai
+  semester: 'semester_1' | 'semester_2';
+  year: number;
+  notes?: string;
+  teacher?: Teacher;
+  ppd?: PPD;
+}
+
+export interface ProgramReport {
+  id: number;
+  program_id: number;
+  school_id: number;
+  report_date: string;
+  session_title: string;
+  subject_id: number;
+  teacher_name: string;
+  duration_hours: number;
+  topics_covered: string;
+  notes?: string;
+  status: 'draft' | 'submitted' | 'approved';
+  submitted_by: number;
+  submitted_date?: string;
+  program?: Program;
+  school?: School;
+  subject?: Subject;
+}
+
+export interface StudentAttendance {
+  id: number;
+  program_report_id: number;
+  student_id: number;
+  present: boolean;
+  notes?: string;
+  student?: Student;
+}
+
+export interface ProgramPhoto {
+  id: number;
+  program_report_id: number;
+  photo_url: string;
+  caption?: string;
+  uploaded_date: string;
 }

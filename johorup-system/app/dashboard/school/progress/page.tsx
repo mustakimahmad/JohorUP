@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockStudents, mockGrades, mockSchools, mockSubjects } from '@/lib/mockData';
-import { exportProgressToExcel } from '@/lib/excelExport';
+import { mockStudents, mockGrades, mockSubjects, mockSchools } from '@/lib/mockData';
+import { Student, StudentGrade } from '@/lib/types';
+import DashboardHeader from '@/components/DashboardHeader';
+import NavigationBar from '@/components/NavigationBar';
 
 export default function SchoolProgressPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [selectedSubject, setSelectedSubject] = useState('all');
+  const [selectedSubject, setSelectedSubject] = useState<number>(0); // 0 = all subjects
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -18,389 +20,296 @@ export default function SchoolProgressPage() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Redirect if not school role
-      if (!parsedUser.email.includes('sekolah')) {
+      // Redirect non-school users
+      if (parsedUser.role !== 'school') {
         router.push('/dashboard');
       }
     }
   }, [router]);
-
-  if (!user) return null;
-
-  // Mock school_id based on email
-  const schoolId = 1;
-  const school = mockSchools.find(s => s.id === schoolId);
-  const schoolStudents = mockStudents.filter(s => s.school_id === schoolId);
-
-  // Calculate progress for each student
-  const calculateProgress = (studentId: number) => {
-    const studentGrades = mockGrades.filter(g => g.student_id === studentId);
-    
-    const gradeValues: { [key: string]: number } = {
-      'A+': 100, 'A': 90, 'A-': 85, 'B+': 80, 'B': 75, 'C+': 70, 'C': 65, 'D': 50, 'E': 40, 'G': 20
-    };
-    
-    const tingkatan4Avg = studentGrades.reduce((sum, g) => sum + (gradeValues[g.grade] || 0), 0) / studentGrades.length;
-    
-    // Simulate improvement for demo
-    const midYearAvg = tingkatan4Avg + Math.random() * 15 + 5; // +5 to +20
-    const trialAvg = midYearAvg + Math.random() * 10 + 3; // +3 to +13 more
-    
-    return {
-      tingkatan4: tingkatan4Avg,
-      midYear: Math.min(midYearAvg, 100),
-      trial: Math.min(trialAvg, 100),
-      improvement: ((Math.min(trialAvg, 100) - tingkatan4Avg) / tingkatan4Avg * 100)
-    };
-  };
-
-  // Calculate subject-specific progress
-  const calculateSubjectProgress = (subjectId: number) => {
-    const subjectGrades = mockGrades.filter(g => g.subject_id === subjectId);
-    const gradeValues: { [key: string]: number } = {
-      'A+': 100, 'A': 90, 'A-': 85, 'B+': 80, 'B': 75, 'C+': 70, 'C': 65, 'D': 50, 'E': 40, 'G': 20
-    };
-    
-    const tingkatan4Avg = subjectGrades.reduce((sum, g) => sum + (gradeValues[g.grade] || 0), 0) / subjectGrades.length;
-    const midYearAvg = tingkatan4Avg + Math.random() * 12 + 8;
-    const trialAvg = midYearAvg + Math.random() * 8 + 5;
-    
-    return {
-      tingkatan4: tingkatan4Avg,
-      midYear: Math.min(midYearAvg, 100),
-      trial: Math.min(trialAvg, 100),
-      improvement: ((Math.min(trialAvg, 100) - tingkatan4Avg) / tingkatan4Avg * 100)
-    };
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     router.push('/login');
   };
 
-  // Get top and bottom performers
-  const studentsWithProgress = schoolStudents.map(student => ({
-    ...student,
-    progress: calculateProgress(student.id)
+  if (!user || user.role !== 'school') return null;
+
+  // Get school data
+  const school = mockSchools.find(s => s.id === user.school_id);
+  const schoolStudents = mockStudents.filter(s => s.school_id === user.school_id);
+  
+  // Get grades for school students
+  const schoolGrades = mockGrades.filter(grade => 
+    schoolStudents.some(student => student.id === grade.student_id)
+  );
+
+  // Calculate statistics
+  const getGradeStats = (subjectId?: number) => {
+    const relevantGrades = subjectId 
+      ? schoolGrades.filter(g => g.subject_id === subjectId)
+      : schoolGrades;
+
+    const gradeDistribution = {
+      'A+': 0, 'A': 0, 'A-': 0, 'B+': 0, 'B': 0, 
+      'C+': 0, 'C': 0, 'D': 0, 'E': 0, 'G': 0, 'TH': 0
+    };
+
+    relevantGrades.forEach(grade => {
+      if (grade.grade in gradeDistribution) {
+        gradeDistribution[grade.grade as keyof typeof gradeDistribution]++;
+      }
+    });
+
+    const totalStudents = relevantGrades.length;
+    const passingGrades = ['A+', 'A', 'A-', 'B+', 'B', 'C+', 'C'] as const;
+    const passingCount = passingGrades.reduce((sum, grade) => sum + gradeDistribution[grade], 0);
+    const passingRate = totalStudents > 0 ? (passingCount / totalStudents * 100) : 0;
+
+    return { gradeDistribution, totalStudents, passingCount, passingRate };
+  };
+
+  const overallStats = getGradeStats();
+  const subjectStats = mockSubjects.map(subject => ({
+    ...subject,
+    ...getGradeStats(subject.id)
   }));
 
-  const topPerformers = studentsWithProgress
-    .sort((a, b) => b.progress.improvement - a.progress.improvement)
-    .slice(0, 10);
+  // Get student performance data
+  const getStudentPerformance = () => {
+    return schoolStudents.map(student => {
+      const studentGrades = schoolGrades.filter(g => g.student_id === student.id);
+      const subjects = studentGrades.map(grade => {
+        const subject = mockSubjects.find(s => s.id === grade.subject_id);
+        return {
+          subject: subject?.name || 'Unknown',
+          grade: grade.grade,
+          isPassing: ['A+', 'A', 'A-', 'B+', 'B', 'C+', 'C'].includes(grade.grade)
+        };
+      });
+      
+      const passingSubjects = subjects.filter(s => s.isPassing).length;
+      const totalSubjects = subjects.length;
+      
+      return {
+        ...student,
+        subjects,
+        passingSubjects,
+        totalSubjects,
+        overallStatus: passingSubjects === totalSubjects ? 'Lulus Semua' : 
+                      passingSubjects > 0 ? 'Lulus Sebahagian' : 'Tidak Lulus'
+      };
+    });
+  };
 
-  const needsAttention = studentsWithProgress
-    .filter(s => s.progress.trial < 50)
-    .sort((a, b) => a.progress.trial - b.progress.trial)
-    .slice(0, 10);
+  const studentPerformance = getStudentPerformance();
+
+  // Filter students by performance
+  const excellentStudents = studentPerformance.filter(s => s.passingSubjects === s.totalSubjects);
+  const needsImprovementStudents = studentPerformance.filter(s => s.passingSubjects < s.totalSubjects);
+
+  const getGradeColor = (grade: string) => {
+    const colors: {[key: string]: string} = {
+      'A+': 'text-green-600', 'A': 'text-green-600', 'A-': 'text-green-500',
+      'B+': 'text-blue-600', 'B': 'text-blue-500',
+      'C+': 'text-yellow-600', 'C': 'text-yellow-500',
+      'D': 'text-orange-500', 'E': 'text-red-500', 'G': 'text-red-600', 'TH': 'text-gray-500'
+    };
+    return colors[grade] || 'text-gray-500';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analisis Perkembangan - {school?.name}</h1>
-            <p className="text-sm text-gray-600">Pemantauan prestasi murid dari Tingkatan 4 hingga Percubaan SPM</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Log Keluar
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        title={`Analisis Perkembangan - ${school?.name || 'Sekolah'}`}
+        subtitle="Analisis prestasi murid mengikut subjek"
+        user={user}
+        onLogout={handleLogout}
+      />
 
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <a href="/dashboard/school" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Dashboard
-            </a>
-            <a href="/dashboard/school/students" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Senarai Murid
-            </a>
-            <a href="/dashboard/school/progress" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
-              Analisis Perkembangan
-            </a>
-          </div>
-        </div>
-      </nav>
+      <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Subject Filter */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium text-gray-700">Analisis mengikut subjek:</label>
+        {/* Overall Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Jumlah Murid</p>
+                <p className="text-3xl font-bold text-gray-900">{schoolStudents.length}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Kadar Kelulusan</p>
+                <p className="text-3xl font-bold text-green-600">{overallStats.passingRate.toFixed(1)}%</p>
+                <p className="text-xs text-gray-500 mt-1">{overallStats.passingCount}/{overallStats.totalStudents} lulus</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Cemerlang</p>
+                <p className="text-3xl font-bold text-purple-600">{excellentStudents.length}</p>
+                <p className="text-xs text-gray-500 mt-1">Lulus semua subjek</p>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Perlu Bimbingan</p>
+                <p className="text-3xl font-bold text-orange-600">{needsImprovementStudents.length}</p>
+                <p className="text-xs text-gray-500 mt-1">Tidak lulus semua</p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Subject Performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Prestasi Mengikut Subjek</h3>
+            <div className="space-y-4">
+              {subjectStats.map(subject => (
+                <div key={subject.id}>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">{subject.name}</span>
+                    <span className="text-sm font-semibold text-gray-900">{subject.passingRate.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full" 
+                      style={{ width: `${subject.passingRate}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {subject.passingCount}/{subject.totalStudents} murid lulus
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Taburan Gred Keseluruhan</h3>
+            <div className="grid grid-cols-3 gap-3">
+              {Object.entries(overallStats.gradeDistribution).map(([grade, count]) => (
+                <div key={grade} className="text-center p-2 bg-gray-50 rounded">
+                  <div className={`text-lg font-bold ${getGradeColor(grade)}`}>{grade}</div>
+                  <div className="text-sm text-gray-600">{count}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Student Performance Table */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Prestasi Individu Murid</h3>
               <select
                 value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setSelectedSubject(parseInt(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Semua Subjek (Purata)</option>
+                <option value={0}>Semua Subjek</option>
                 {mockSubjects.map(subject => (
                   <option key={subject.id} value={subject.id}>{subject.name}</option>
                 ))}
               </select>
             </div>
-            <button 
-              onClick={() => exportProgressToExcel(schoolId)}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Download Excel
-            </button>
           </div>
-        </div>
-
-        {/* Overall Progress Chart */}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">
-            Graf Perkembangan Keseluruhan Sekolah
-            {selectedSubject !== 'all' && ` - ${mockSubjects.find(s => s.id === parseInt(selectedSubject))?.name}`}
-          </h3>
-          
-          {selectedSubject === 'all' ? (
-            // Overall progress
-            <div className="space-y-6">
-              {mockSubjects.map(subject => {
-                const progress = calculateSubjectProgress(subject.id);
-                return (
-                  <div key={subject.id}>
-                    <h4 className="text-md font-medium text-gray-800 mb-3">{subject.name}</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Tingkatan 4 (Nov 2025)</span>
-                          <span className="text-sm font-semibold text-gray-900">{progress.tingkatan4.toFixed(1)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div 
-                            className="bg-orange-500 h-4 rounded-full flex items-center justify-end pr-2"
-                            style={{ width: `${progress.tingkatan4}%` }}
-                          >
-                            <span className="text-xs font-semibold text-white">{progress.tingkatan4.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Pertengahan Tahun (Mei 2026)</span>
-                          <span className="text-sm font-semibold text-gray-900">{progress.midYear.toFixed(1)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div 
-                            className="bg-yellow-500 h-4 rounded-full flex items-center justify-end pr-2"
-                            style={{ width: `${progress.midYear}%` }}
-                          >
-                            <span className="text-xs font-semibold text-white">{progress.midYear.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Percubaan SPM (Sep 2026)</span>
-                          <span className="text-sm font-semibold text-gray-900">{progress.trial.toFixed(1)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div 
-                            className="bg-green-500 h-4 rounded-full flex items-center justify-end pr-2"
-                            style={{ width: `${progress.trial}%` }}
-                          >
-                            <span className="text-xs font-semibold text-white">{progress.trial.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-green-600 mt-1">
-                          ↑ +{progress.improvement.toFixed(1)}% dari Tingkatan 4
-                        </p>
-                      </div>
-                    </div>
-                    <hr className="my-6" />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            // Single subject progress
-            (() => {
-              const progress = calculateSubjectProgress(parseInt(selectedSubject));
-              return (
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Tingkatan 4 (Nov 2025)</span>
-                      <span className="text-sm font-semibold text-gray-900">{progress.tingkatan4.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-8">
-                      <div 
-                        className="bg-orange-500 h-8 rounded-full flex items-center justify-end pr-3"
-                        style={{ width: `${progress.tingkatan4}%` }}
-                      >
-                        <span className="text-xs font-semibold text-white">{progress.tingkatan4.toFixed(0)}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Pertengahan Tahun (Mei 2026)</span>
-                      <span className="text-sm font-semibold text-gray-900">{progress.midYear.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-8">
-                      <div 
-                        className="bg-yellow-500 h-8 rounded-full flex items-center justify-end pr-3"
-                        style={{ width: `${progress.midYear}%` }}
-                      >
-                        <span className="text-xs font-semibold text-white">{progress.midYear.toFixed(0)}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Percubaan SPM (Sep 2026)</span>
-                      <span className="text-sm font-semibold text-gray-900">{progress.trial.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-8">
-                      <div 
-                        className="bg-green-500 h-8 rounded-full flex items-center justify-end pr-3"
-                        style={{ width: `${progress.trial}%` }}
-                      >
-                        <span className="text-xs font-semibold text-white">{progress.trial.toFixed(0)}%</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-green-600 mt-2">
-                      ↑ Peningkatan sebanyak {progress.improvement.toFixed(1)}% dari Tingkatan 4
-                    </p>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-        </div>
-
-        {/* Performance Analysis */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Top Performers */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Murid Berpencapaian Terbaik</h3>
-              <p className="text-sm text-gray-600">Berdasarkan peningkatan markah</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">T4</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Percubaan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">+/-</th>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Murid</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bahasa Melayu</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sejarah</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Matematik</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {studentPerformance.map((student) => (
+                  <tr key={student.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{student.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{student.class}</td>
+                    {mockSubjects.map(subject => {
+                      const subjectGrade = student.subjects.find(s => s.subject === subject.name);
+                      return (
+                        <td key={subject.id} className="px-6 py-4 text-sm">
+                          <span className={`font-semibold ${getGradeColor(subjectGrade?.grade || 'TH')}`}>
+                            {subjectGrade?.grade || 'TH'}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        student.overallStatus === 'Lulus Semua' 
+                          ? 'bg-green-100 text-green-800'
+                          : student.overallStatus === 'Lulus Sebahagian'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {student.overallStatus}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {topPerformers.slice(0, 8).map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{student.name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{student.class}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{student.progress.tingkatan4.toFixed(0)}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-gray-900">{student.progress.trial.toFixed(0)}</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          +{student.progress.improvement.toFixed(1)}%
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Students Needing Attention */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">Murid Perlu Perhatian</h3>
-              <p className="text-sm text-gray-600">Markah percubaan &lt; 50</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">T4</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Percubaan</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {needsAttention.length > 0 ? needsAttention.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{student.name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{student.class}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{student.progress.tingkatan4.toFixed(0)}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-red-600">{student.progress.trial.toFixed(0)}</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-                          Perlu Bantuan
-                        </span>
-                      </td>
-                    </tr>
-                  )) : (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                        <div className="flex flex-col items-center">
-                          <svg className="w-12 h-12 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-sm font-medium text-green-600">Bagus!</p>
-                          <p className="text-xs text-gray-500">Semua murid mencapai markah ≥ 50</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
         {/* Recommendations */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Cadangan Tindakan</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="text-sm font-semibold text-green-900 mb-2">Murid Cemerlang</h4>
-              <p className="text-sm text-green-800">
-                {topPerformers.slice(0, 5).length} murid menunjukkan peningkatan terbaik. 
-                Teruskan motivasi dan berikan cabaran tambahan.
-              </p>
+        <div className="mt-8 bg-blue-50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">Cadangan Tindakan</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium text-blue-800 mb-2">Murid Cemerlang ({excellentStudents.length} murid)</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Berikan pengayaan dan cabaran tambahan</li>
+                <li>• Jadikan mentor untuk rakan sebaya</li>
+                <li>• Sertai pertandingan akademik</li>
+              </ul>
             </div>
-            
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <h4 className="text-sm font-semibold text-yellow-900 mb-2">Murid Sederhana</h4>
-              <p className="text-sm text-yellow-800">
-                Fokus kepada teknik menjawab dan latihan tambahan. 
-                Adakan sesi bimbingan berkumpulan.
-              </p>
-            </div>
-            
-            <div className="bg-red-50 p-4 rounded-lg">
-              <h4 className="text-sm font-semibold text-red-900 mb-2">Murid Perlu Perhatian</h4>
-              <p className="text-sm text-red-800">
-                {needsAttention.length} murid perlu bimbingan intensif. 
-                Cadangkan program khas dan bimbingan 1-ke-1.
-              </p>
+            <div>
+              <h4 className="font-medium text-blue-800 mb-2">Murid Perlu Bimbingan ({needsImprovementStudents.length} murid)</h4>
+              <ul className="text-sm text-blue-700 space-y-1">
+                <li>• Sertakan dalam program tuisyen intensif</li>
+                <li>• Bimbingan khas untuk subjek lemah</li>
+                <li>• Pantau kemajuan secara berkala</li>
+              </ul>
             </div>
           </div>
         </div>

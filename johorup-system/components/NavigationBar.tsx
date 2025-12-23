@@ -2,17 +2,64 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function NavigationBar() {
   const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
 
-  const navItems = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/dashboard/students', label: 'Murid' },
-    { href: '/dashboard/programs', label: 'Program' },
-    { href: '/dashboard/budget', label: 'Kewangan' },
-    { href: '/dashboard/reports', label: 'Laporan' },
-  ];
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  // Different navigation items based on user role
+  const getNavItems = () => {
+    if (!user) return [];
+
+    const baseItems = [
+      { href: '/dashboard', label: 'Dashboard' },
+    ];
+
+    if (user.role === 'school') {
+      return [
+        ...baseItems,
+        { href: '/dashboard/students', label: 'Senarai Nama Murid' },
+        { href: '/dashboard/school/progress', label: 'Analisis Perkembangan Murid' },
+        { href: '/dashboard/school/tuition-report', label: 'Laporan' },
+      ];
+    }
+
+    if (user.role === 'yayasan_jcorp') {
+      return [
+        ...baseItems,
+        { href: '/dashboard/students', label: 'Murid' },
+        { href: '/dashboard/teachers', label: 'Guru' },
+        { href: '/dashboard/programs', label: 'Program' },
+        { href: '/dashboard/calendar', label: 'Kalendar' },
+        { href: '/dashboard/tuition-analysis', label: 'Analisis Tuisyen' },
+        { href: '/dashboard/budget', label: 'Kewangan' },
+        { href: '/dashboard/reports', label: 'Laporan' },
+        { href: '/dashboard/yayasan-overview', label: 'Gambaran Keseluruhan' },
+      ];
+    }
+
+    // For other roles (ppd, sektor_pembelajaran, sektor_perancangan)
+    return [
+      ...baseItems,
+      { href: '/dashboard/students', label: 'Murid' },
+      { href: '/dashboard/teachers', label: 'Guru' },
+      { href: '/dashboard/programs', label: 'Program' },
+      { href: '/dashboard/calendar', label: 'Kalendar' },
+      { href: '/dashboard/tuition-analysis', label: 'Analisis Tuisyen' },
+      { href: '/dashboard/budget', label: 'Kewangan' },
+      { href: '/dashboard/reports', label: 'Laporan' },
+    ];
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="bg-white border-b">

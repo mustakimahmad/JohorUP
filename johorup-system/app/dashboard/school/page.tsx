@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockStudents, mockGrades, mockSchools } from '@/lib/mockData';
+import { mockStudents, mockProgramReports, mockStudentAttendance, mockProgramPhotos, mockPrograms, mockSchools } from '@/lib/mockData';
 import DashboardHeader from '@/components/DashboardHeader';
+import NavigationBar from '@/components/NavigationBar';
 
 export default function SchoolDashboardPage() {
   const router = useRouter();
@@ -17,328 +18,273 @@ export default function SchoolDashboardPage() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       
-      // Redirect if not school role
-      if (!parsedUser.email.includes('sekolah')) {
+      // Redirect non-school users
+      if (parsedUser.role !== 'school') {
         router.push('/dashboard');
       }
     }
   }, [router]);
-
-  if (!user) return null;
-
-  // Mock school_id based on email
-  const schoolId = 1;
-  const school = mockSchools.find(s => s.id === schoolId);
-  const schoolStudents = mockStudents.filter(s => s.school_id === schoolId);
-
-  // Calculate progress for each student
-  const calculateProgress = (studentId: number) => {
-    const studentGrades = mockGrades.filter(g => g.student_id === studentId);
-    
-    // Simulate different exam grades for demo
-    const gradeValues: { [key: string]: number } = {
-      'A+': 100, 'A': 90, 'A-': 85, 'B+': 80, 'B': 75, 'C+': 70, 'C': 65, 'D': 50, 'E': 40, 'G': 20
-    };
-    
-    const tingkatan4Avg = studentGrades.reduce((sum, g) => sum + (gradeValues[g.grade] || 0), 0) / studentGrades.length;
-    
-    // Simulate improvement for demo
-    const midYearAvg = tingkatan4Avg + Math.random() * 10;
-    const trialAvg = midYearAvg + Math.random() * 8;
-    
-    return {
-      tingkatan4: tingkatan4Avg,
-      midYear: midYearAvg,
-      trial: trialAvg,
-      improvement: ((trialAvg - tingkatan4Avg) / tingkatan4Avg * 100).toFixed(1)
-    };
-  };
-
-  // Calculate overall school statistics
-  const calculateSchoolStats = () => {
-    let totalT4 = 0, totalMid = 0, totalTrial = 0;
-    
-    schoolStudents.forEach(student => {
-      const progress = calculateProgress(student.id);
-      totalT4 += progress.tingkatan4;
-      totalMid += progress.midYear;
-      totalTrial += progress.trial;
-    });
-    
-    const count = schoolStudents.length;
-    return {
-      tingkatan4: (totalT4 / count).toFixed(1),
-      midYear: (totalMid / count).toFixed(1),
-      trial: (totalTrial / count).toFixed(1),
-      improvement: (((totalTrial - totalT4) / totalT4) * 100).toFixed(1)
-    };
-  };
-
-  const schoolStats = calculateSchoolStats();
-
-  // Count students by performance category
-  const categorizeStudents = () => {
-    const categories = { excellent: 0, good: 0, moderate: 0, needsAttention: 0 };
-    
-    schoolStudents.forEach(student => {
-      const progress = calculateProgress(student.id);
-      if (progress.trial >= 80) categories.excellent++;
-      else if (progress.trial >= 65) categories.good++;
-      else if (progress.trial >= 50) categories.moderate++;
-      else categories.needsAttention++;
-    });
-    
-    return categories;
-  };
-
-  const categories = categorizeStudents();
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     router.push('/login');
   };
 
+  if (!user || user.role !== 'school') return null;
+
+  // Get school data
+  const school = mockSchools.find(s => s.id === user.school_id);
+  const schoolStudents = mockStudents.filter(s => s.school_id === user.school_id);
+  const schoolReports = mockProgramReports.filter(r => r.school_id === user.school_id);
+  
+  // Calculate statistics
+  const totalReports = schoolReports.length;
+  const submittedReports = schoolReports.filter(r => r.status === 'submitted' || r.status === 'approved').length;
+  const draftReports = schoolReports.filter(r => r.status === 'draft').length;
+  const approvedReports = schoolReports.filter(r => r.status === 'approved').length;
+
+  // Calculate attendance statistics
+  const totalAttendanceRecords = mockStudentAttendance.filter(a => 
+    schoolReports.some(r => r.id === a.program_report_id)
+  );
+  const presentCount = totalAttendanceRecords.filter(a => a.present).length;
+  const attendanceRate = totalAttendanceRecords.length > 0 ? (presentCount / totalAttendanceRecords.length * 100) : 0;
+
+  // Calculate photo statistics
+  const totalPhotos = mockProgramPhotos.filter(p => 
+    schoolReports.some(r => r.id === p.program_report_id)
+  ).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
-        title={school?.name || 'Dashboard Sekolah'}
-        subtitle="Dashboard Pemantauan Murid"
+        title={`Dashboard ${school?.name || 'Sekolah'}`}
+        subtitle="Pengurusan Murid Terlibat dan Laporan Program"
         user={user}
         onLogout={handleLogout}
       />
 
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <a href="/dashboard/school" className="border-b-2 border-blue-600 px-3 py-4 text-sm font-medium text-blue-600">
-              Dashboard
-            </a>
-            <a href="/dashboard/school/students" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Senarai Murid
-            </a>
-            <a href="/dashboard/school/progress" className="px-3 py-4 text-sm font-medium text-gray-600 hover:text-gray-900">
-              Analisis Perkembangan
-            </a>
-          </div>
-        </div>
-      </nav>
+      <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-600 mb-2">Jumlah Murid</p>
-            <p className="text-3xl font-bold text-gray-900">{schoolStudents.length}</p>
-            <p className="text-xs text-gray-500 mt-1">Murid sasaran program</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-600 mb-2">Purata Tingkatan 4</p>
-            <p className="text-3xl font-bold text-orange-600">{schoolStats.tingkatan4}</p>
-            <p className="text-xs text-gray-500 mt-1">Markah purata</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-600 mb-2">Purata Percubaan</p>
-            <p className="text-3xl font-bold text-green-600">{schoolStats.trial}</p>
-            <p className="text-xs text-gray-500 mt-1">Markah purata</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <p className="text-sm text-gray-600 mb-2">Peningkatan</p>
-            <p className="text-3xl font-bold text-blue-600">+{schoolStats.improvement}%</p>
-            <p className="text-xs text-gray-500 mt-1">Dari Tingkatan 4</p>
-          </div>
-        </div>
-
-        {/* Progress Chart */}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Graf Perkembangan Purata Sekolah</h3>
-          
-          {/* Simple Bar Chart */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Tingkatan 4 (Nov 2025)</span>
-                <span className="text-sm font-semibold text-gray-900">{schoolStats.tingkatan4}</span>
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Tindakan Pantas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => router.push('/dashboard/students')}
+              className="p-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-3"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <div className="text-left">
+                <div className="font-semibold">Senarai Nama Murid</div>
+                <div className="text-sm opacity-90">Lihat data murid sekolah</div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-8">
-                <div 
-                  className="bg-orange-500 h-8 rounded-full flex items-center justify-end pr-3"
-                  style={{ width: `${schoolStats.tingkatan4}%` }}
-                >
-                  <span className="text-xs font-semibold text-white">{schoolStats.tingkatan4}%</span>
-                </div>
-              </div>
-            </div>
+            </button>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Pertengahan Tahun (Mei 2026)</span>
-                <span className="text-sm font-semibold text-gray-900">{schoolStats.midYear}</span>
+            <button
+              onClick={() => router.push('/dashboard/school/progress')}
+              className="p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-3"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <div className="text-left">
+                <div className="font-semibold">Analisis Perkembangan Murid</div>
+                <div className="text-sm opacity-90">Prestasi & kemajuan murid</div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-8">
-                <div 
-                  className="bg-yellow-500 h-8 rounded-full flex items-center justify-end pr-3"
-                  style={{ width: `${schoolStats.midYear}%` }}
-                >
-                  <span className="text-xs font-semibold text-white">{schoolStats.midYear}%</span>
-                </div>
-              </div>
-            </div>
+            </button>
 
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Percubaan SPM (Sep 2026)</span>
-                <span className="text-sm font-semibold text-gray-900">{schoolStats.trial}</span>
+            <button
+              onClick={() => router.push('/dashboard/school/tuition-report')}
+              className="p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-3"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <div className="text-left">
+                <div className="font-semibold">Laporan</div>
+                <div className="text-sm opacity-90">Laporan tuisyen & bukti</div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-8">
-                <div 
-                  className="bg-green-500 h-8 rounded-full flex items-center justify-end pr-3"
-                  style={{ width: `${schoolStats.trial}%` }}
-                >
-                  <span className="text-xs font-semibold text-white">{schoolStats.trial}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-green-800">
-              <span className="font-semibold">Pencapaian Baik!</span> Sekolah menunjukkan peningkatan sebanyak {schoolStats.improvement}% dari peperiksaan awal hingga percubaan SPM.
-            </p>
+            </button>
           </div>
         </div>
 
-        {/* Student Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Kategori Pencapaian Murid</h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Jumlah Murid</p>
+                <p className="text-3xl font-bold text-gray-900">{schoolStudents.length}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Pengisian Program</p>
+                <p className="text-3xl font-bold text-gray-900">{totalReports}</p>
+                <p className="text-xs text-gray-500 mt-1">{submittedReports} dihantar</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Kadar Kehadiran</p>
+                <p className="text-3xl font-bold text-gray-900">{attendanceRate.toFixed(1)}%</p>
+                <p className="text-xs text-gray-500 mt-1">{presentCount}/{totalAttendanceRecords.length} hadir</p>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Gambar Diupload</p>
+                <p className="text-3xl font-bold text-gray-900">{totalPhotos}</p>
+                <p className="text-xs text-gray-500 mt-1">Dokumentasi program</p>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Report Status Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Pengisian Program</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-sm text-gray-700">Cemerlang (80-100)</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Draf</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gray-500 h-2 rounded-full" 
+                      style={{ width: totalReports > 0 ? `${(draftReports / totalReports) * 100}%` : '0%' }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">{draftReports}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{categories.excellent} murid</span>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-sm text-gray-700">Baik (65-79)</span>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Dihantar</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-yellow-500 h-2 rounded-full" 
+                      style={{ width: totalReports > 0 ? `${((submittedReports - approvedReports) / totalReports) * 100}%` : '0%' }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">{submittedReports - approvedReports}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{categories.good} murid</span>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                  <span className="text-sm text-gray-700">Sederhana (50-64)</span>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Diluluskan</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full" 
+                      style={{ width: totalReports > 0 ? `${(approvedReports / totalReports) * 100}%` : '0%' }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900">{approvedReports}</span>
                 </div>
-                <span className="text-sm font-semibold text-gray-900">{categories.moderate} murid</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                  <span className="text-sm text-gray-700">Perlu Perhatian (&lt;50)</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">{categories.needsAttention} murid</span>
-              </div>
-            </div>
-
-            {/* Pie Chart Visualization */}
-            <div className="mt-6">
-              <div className="flex h-4 rounded-full overflow-hidden">
-                <div 
-                  className="bg-green-500" 
-                  style={{ width: `${(categories.excellent / schoolStudents.length) * 100}%` }}
-                ></div>
-                <div 
-                  className="bg-blue-500" 
-                  style={{ width: `${(categories.good / schoolStudents.length) * 100}%` }}
-                ></div>
-                <div 
-                  className="bg-yellow-500" 
-                  style={{ width: `${(categories.moderate / schoolStudents.length) * 100}%` }}
-                ></div>
-                <div 
-                  className="bg-red-500" 
-                  style={{ width: `${(categories.needsAttention / schoolStudents.length) * 100}%` }}
-                ></div>
               </div>
             </div>
           </div>
 
-          {/* Subject Performance */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Pencapaian Mengikut Subjek</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-700">Bahasa Melayu</span>
-                  <span className="text-sm font-semibold text-gray-900">68%</span>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Program Aktif</h3>
+            <div className="space-y-3">
+              {mockPrograms.slice(0, 3).map(program => (
+                <div key={program.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{program.title}</p>
+                    <p className="text-xs text-gray-500">{program.program_type}</p>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                    Aktif
+                  </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-blue-600 h-3 rounded-full" style={{ width: '68%' }}></div>
-                </div>
-                <p className="text-xs text-green-600 mt-1">↑ +12% dari Tingkatan 4</p>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-700">Sejarah</span>
-                  <span className="text-sm font-semibold text-gray-900">62%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-green-600 h-3 rounded-full" style={{ width: '62%' }}></div>
-                </div>
-                <p className="text-xs text-green-600 mt-1">↑ +15% dari Tingkatan 4</p>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-gray-700">Matematik</span>
-                  <span className="text-sm font-semibold text-gray-900">65%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-purple-600 h-3 rounded-full" style={{ width: '65%' }}></div>
-                </div>
-                <p className="text-xs text-green-600 mt-1">↑ +10% dari Tingkatan 4</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Top Performers */}
+        {/* Recent Reports */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Murid Berpencapaian Tertinggi</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">Pengisian Program Terkini</h3>
+              <button
+                onClick={() => router.push('/dashboard/school/tuition-report')}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              >
+                Lihat Semua
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kelas</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tingkatan 4</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Percubaan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Peningkatan</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarikh</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tajuk Program</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guru Pelaksana</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {schoolStudents.slice(0, 10).map((student) => {
-                  const progress = calculateProgress(student.id);
+                {schoolReports.slice(0, 5).map((report) => {
+                  const getStatusBadge = (status: string) => {
+                    const statusConfig = {
+                      draft: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Draf' },
+                      submitted: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Dihantar' },
+                      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Diluluskan' },
+                    };
+                    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+                    return (
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+                        {config.label}
+                      </span>
+                    );
+                  };
+
                   return (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{student.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{student.class}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{progress.tingkatan4.toFixed(0)}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">{progress.trial.toFixed(0)}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          +{progress.improvement}%
-                        </span>
+                    <tr key={report.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {new Date(report.report_date).toLocaleDateString('ms-MY')}
                       </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{report.session_title}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{report.teacher_name}</td>
+                      <td className="px-6 py-4">{getStatusBadge(report.status)}</td>
                     </tr>
                   );
                 })}

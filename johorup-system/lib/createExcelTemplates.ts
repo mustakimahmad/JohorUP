@@ -91,7 +91,35 @@ export const createDatabaseTemplates = () => {
   const programsSheet = XLSX.utils.aoa_to_sheet(programsData);
   XLSX.utils.book_append_sheet(workbook, programsSheet, 'Programs');
 
-  // 8. Budget Template
+  // 8. Teachers Template
+  const teachersData = [
+    ['id', 'name', 'ic_number', 'school_id', 'subject_id', 'years_experience', 'qualification', 'phone', 'email'],
+    [1, 'Ahmad bin Abdullah', '801234-56-7890', 1, 1, 15, 'Sarjana Muda Pendidikan', '0123456789', 'ahmad.guru@moe.gov.my'],
+    [2, 'Siti Nurhaliza binti Hassan', '850987-65-4321', 1, 2, 12, 'Sarjana Pendidikan', '0198765432', 'siti.guru@moe.gov.my'],
+    [3, 'Muhammad Hafiz bin Ismail', '790555-44-3333', 2, 3, 18, 'Sarjana Muda Pendidikan', '0167894561', 'hafiz.guru@moe.gov.my'],
+    ['', '(Tambah guru lain di sini)', '', '', '', '', '', '', ''],
+    ['', 'Subject IDs: 1=Bahasa Melayu, 2=Sejarah, 3=Matematik', '', '', '', '', '', '', ''],
+    ['', 'Qualifications: Sarjana Muda Pendidikan, Sarjana Pendidikan, Diploma Pendidikan', '', '', '', '', '', '', '']
+  ];
+  const teachersSheet = XLSX.utils.aoa_to_sheet(teachersData);
+  XLSX.utils.book_append_sheet(workbook, teachersSheet, 'Teachers');
+
+  // 9. TeacherKPIs Template
+  const teacherKPIsData = [
+    ['id', 'teacher_id', 'assessment_date', 'pdp_score', 'assessed_by_ppd', 'semester', 'year', 'notes'],
+    [1, 1, '2025-06-15', 85, 1, 'semester_1', 2025, 'Pencerapan PdP yang baik'],
+    [2, 1, '2025-11-20', 88, 1, 'semester_2', 2025, 'Peningkatan dari semester 1'],
+    [3, 2, '2025-06-15', 75, 1, 'semester_1', 2025, 'Perlu penambahbaikan'],
+    [4, 2, '2025-11-20', 82, 1, 'semester_2', 2025, 'Menunjukkan peningkatan'],
+    ['', '(Tambah KPI guru lain di sini)', '', '', '', '', '', ''],
+    ['', 'PDP Score: 0-100 (Skor Pencerapan PdP)', '', '', '', '', '', ''],
+    ['', 'Semester: semester_1, semester_2', '', '', '', '', '', ''],
+    ['', 'Date Format: YYYY-MM-DD', '', '', '', '', '', '']
+  ];
+  const teacherKPIsSheet = XLSX.utils.aoa_to_sheet(teacherKPIsData);
+  XLSX.utils.book_append_sheet(workbook, teacherKPIsSheet, 'TeacherKPIs');
+
+  // 10. Budget Template
   const budgetData = [
     ['id', 'program_id', 'amount', 'description', 'status', 'approved_by', 'approved_date'],
     [1, 1, 120000, 'Gaji tutor dan bahan pembelajaran', 'approved', 4, '2026-01-05'],

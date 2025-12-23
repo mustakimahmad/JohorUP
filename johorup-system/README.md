@@ -5,7 +5,7 @@ Sistem dashboard untuk memantau program bimbingan murid Tingkatan 5 yang akan me
 ## 📋 Tentang Sistem
 
 Program JohorUP ditaja oleh JCorp dan Yayasan Hasanah dengan peruntukan RM450,000. Sistem ini melibatkan:
-- **1,550 murid** dari 22 sekolah di seluruh Johor
+- **880 murid** dari 20 sekolah di seluruh Johor
 - **3 subjek kritikal**: Bahasa Melayu, Sejarah, dan Matematik
 - **4 peranan pengguna**: Sekolah, PPD, Sektor Pembelajaran, dan Sektor Perancangan
 
@@ -55,7 +55,7 @@ Untuk login, gunakan mana-mana email di bawah dengan password: `demo123`
 - Senarai program terkini
 
 ### 2. Pengurusan Murid
-- Senarai 1,550 murid sasaran
+- Senarai 880 murid sasaran
 - Data gred untuk BM, Sejarah, Matematik
 - Filter mengikut sekolah
 - Carian murid
@@ -83,8 +83,8 @@ Untuk login, gunakan mana-mana email di bawah dengan password: `demo123`
 Sistem menggunakan PostgreSQL dengan tables:
 - `users` - Authentication & roles
 - `ppd` - Pejabat Pendidikan Daerah
-- `schools` - 22 sekolah
-- `students` - 1,550 murid
+- `schools` - 20 sekolah
+- `students` - 880 murid
 - `subjects` - BM, Sejarah, Matematik
 - `grades` - Gred murid (Tingkatan 4, Mid-year, Trial, SPM)
 - `programs` - Program bimbingan

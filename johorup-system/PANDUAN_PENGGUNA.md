@@ -2,7 +2,7 @@
 
 ## 🎯 Objektif Sistem
 
-Sistem JohorUP adalah platform pemantauan untuk 1,550 murid Tingkatan 5 yang akan menduduki SPM 2026. Sistem ini membantu:
+Sistem JohorUP adalah platform pemantauan untuk 880 murid Tingkatan 5 yang akan menduduki SPM 2026. Sistem ini membantu:
 - Memantau pencapaian murid dalam 3 subjek kritikal (BM, Sejarah, Matematik)
 - Merancang dan menguruskan program bimbingan
 - Mengurus peruntukan kewangan RM450,000
@@ -72,7 +72,7 @@ Sistem JohorUP adalah platform pemantauan untuk 1,550 murid Tingkatan 5 yang aka
 - Peruntukan bajet
 
 ### Murid
-- Senarai 1,550 murid
+- Senarai 880 murid
 - Data peribadi dan sekolah
 - Gred untuk 3 subjek
 - Filter dan carian
