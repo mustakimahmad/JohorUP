@@ -13,7 +13,7 @@ export default function YayasanOverviewPage() {
   // Enhanced statistics for Yayasan JCorp
   const [yayasanStats] = useState({
     ...mockDashboardStats,
-    totalInvestment: 2500000, // RM 2.5 million investment
+    totalInvestment: 450000, // RM 450,000 investment
     programROI: 85.7, // Return on Investment percentage
     beneficiarySchools: 20,
     totalTeachers: 120,
@@ -27,22 +27,59 @@ export default function YayasanOverviewPage() {
       communityReach: 15000
     },
     financialBreakdown: {
-      teacherTraining: 800000,
-      studentPrograms: 1200000,
-      infrastructure: 300000,
-      monitoring: 200000
+      teacherTraining: 150000,
+      studentPrograms: 200000,
+      infrastructure: 60000,
+      monitoring: 40000
     },
     regionalImpact: [
       { ppd: 'PPD Johor Bahru', schools: 8, students: 352, improvement: 72.1 },
       { ppd: 'PPD Muar', schools: 6, students: 264, improvement: 65.8 },
       { ppd: 'PPD Batu Pahat', schools: 6, students: 264, improvement: 63.9 }
     ],
-    monthlyProgress: [
-      { month: 'Jan 2026', target: 45, achieved: 42.1, budget: 180000 },
-      { month: 'Feb 2026', target: 48, achieved: 45.3, budget: 185000 },
-      { month: 'Mar 2026', target: 52, achieved: 49.7, budget: 190000 },
-      { month: 'Apr 2026', target: 55, achieved: 52.8, budget: 195000 },
-      { month: 'Mei 2026', target: 58, achieved: 55.2, budget: 200000 }
+    phaseProgress: [
+      { 
+        phase: 'Fasa 1', 
+        period: 'Jan 2026 - Apr 2026',
+        endDate: '30 April 2026',
+        target: 30, 
+        achieved: 28.5, 
+        budget: 150000,
+        status: 'Dalam Pelaksanaan',
+        milestones: [
+          'Latihan guru peringkat awal',
+          'Penyediaan bahan pembelajaran',
+          'Pelaksanaan program tuisyen'
+        ]
+      },
+      { 
+        phase: 'Fasa 2', 
+        period: 'Mei 2026 - Sep 2026',
+        endDate: '30 September 2026',
+        target: 60, 
+        achieved: 0, 
+        budget: 200000,
+        status: 'Belum Bermula',
+        milestones: [
+          'Pemantauan dan penilaian',
+          'Penambahbaikan program',
+          'Latihan lanjutan guru'
+        ]
+      },
+      { 
+        phase: 'Fasa 3', 
+        period: 'Okt 2026 - Apr 2027',
+        endDate: '30 April 2027',
+        target: 100, 
+        achieved: 0, 
+        budget: 100000,
+        status: 'Belum Bermula',
+        milestones: [
+          'Penilaian akhir program',
+          'Laporan impak keseluruhan',
+          'Cadangan kesinambungan'
+        ]
+      }
     ]
   });
 
@@ -69,7 +106,13 @@ export default function YayasanOverviewPage() {
   if (!user || user.role !== 'yayasan_jcorp') return null;
 
   const formatCurrency = (amount: number) => {
-    return `RM ${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000000) {
+      return `RM ${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `RM ${(amount / 1000).toFixed(0)}K`;
+    } else {
+      return `RM ${amount.toLocaleString()}`;
+    }
   };
 
   return (
@@ -229,41 +272,73 @@ export default function YayasanOverviewPage() {
 
         {/* Monthly Progress Tracking */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Penjejakan Kemajuan Bulanan</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bulan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target (%)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pencapaian (%)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bajet (RM)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {yayasanStats.monthlyProgress.map((month, index) => {
-                  const isOnTrack = month.achieved >= month.target * 0.9;
-                  return (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{month.month}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{month.target}%</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{month.achieved}%</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">RM {month.budget.toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          isOnTrack 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Penjejakan Kemajuan Mengikut Fasa</h3>
+          <div className="space-y-6">
+            {yayasanStats.phaseProgress.map((phase, index) => (
+              <div key={index} className="border rounded-lg p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">{phase.phase}</h4>
+                    <p className="text-sm text-gray-600">{phase.period}</p>
+                    <p className="text-xs text-gray-500">Tamat: {phase.endDate}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-blue-600">{phase.achieved}%</p>
+                    <p className="text-sm text-gray-600">daripada {phase.target}%</p>
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                      phase.status === 'Dalam Pelaksanaan' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : phase.status === 'Selesai'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {phase.status}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Kemajuan</span>
+                    <span>{formatCurrency(phase.budget)} diperuntukkan</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-4">
+                    <div 
+                      className={`h-4 rounded-full ${
+                        phase.status === 'Dalam Pelaksanaan' 
+                          ? 'bg-blue-600' 
+                          : phase.status === 'Selesai'
+                          ? 'bg-green-600'
+                          : 'bg-gray-400'
+                      }`}
+                      style={{ width: `${(phase.achieved / phase.target) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Milestones */}
+                <div>
+                  <h5 className="text-sm font-medium text-gray-700 mb-2">Pencapaian Utama:</h5>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    {phase.milestones.map((milestone, idx) => (
+                      <li key={idx} className="flex items-start">
+                        <span className={`mr-2 ${
+                          phase.status === 'Dalam Pelaksanaan' 
+                            ? 'text-blue-500' 
+                            : phase.status === 'Selesai'
+                            ? 'text-green-500'
+                            : 'text-gray-400'
                         }`}>
-                          {isOnTrack ? 'Pada Landasan' : 'Perlu Perhatian'}
+                          {phase.status === 'Selesai' ? '✓' : phase.status === 'Dalam Pelaksanaan' ? '→' : '○'}
                         </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        {milestone}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
