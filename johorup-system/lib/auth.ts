@@ -1,5 +1,4 @@
 import NextAuth from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { Pool } from 'pg'
 import bcrypt from 'bcryptjs'
@@ -312,18 +311,6 @@ async function determineUserRole(email: string, name: string, profile?: any) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    // Google SSO - only enable if environment variables are set
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
-      GoogleProvider({
-        clientId: process.env.GOOGLE_CLIENT_ID!,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        authorization: {
-          params: {
-            scope: 'openid email profile',
-          }
-        }
-      })
-    ] : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -405,34 +392,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'google') {
-        try {
-          // Determine user role using hybrid strategy
-          const roleData = await determineUserRole(
-            user.email!,
-            user.name!,
-            profile
-          )
-          
-          // Reject if pending approval
-          if (roleData.role === 'pending_approval') {
-            console.log(`🚫 Login rejected - pending approval: ${user.email}`)
-            return '/auth/pending-approval'
-          }
-          
-          // Allow login for approved roles
-          return true
-          
-        } catch (error) {
-          console.error('Sign in error:', error)
-          return false
-        }
-      }
-      
-      return true
-    },
-    
     async jwt({ token, user }) {
       if (user) {
         try {
