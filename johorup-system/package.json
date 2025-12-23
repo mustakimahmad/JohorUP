@@ -1,12 +1,19 @@
 {
   "name": "johorup-system",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "type-check": "tsc --noEmit",
+    "deploy:production": "bash scripts/deploy-production.sh",
+    "deploy:vercel": "bash scripts/deploy-production.sh vercel",
+    "deploy:docker": "bash scripts/deploy-production.sh docker",
+    "import:data": "node scripts/import-production-data.js",
+    "backup:db": "pg_dump $DATABASE_URL > backups/backup_$(date +%Y%m%d_%H%M%S).sql",
+    "health-check": "curl -f http://localhost:3000/api/health || exit 1"
   },
   "dependencies": {
     "next": "16.0.7",
@@ -25,5 +32,9 @@
     "eslint-config-next": "16.0.7",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
