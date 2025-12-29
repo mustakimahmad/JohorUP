@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JohorUP System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 JohorUP System</h1>
+        <p>Sistem Pengurusan Program Tuisyen Johor</p>
+        <div class="spinner"></div>
+        <p>Mengalihkan ke sistem...</p>
+        
+        <div style="margin-top: 30px;">
+            <a href="/login/" class="btn">🔐 Login ke Sistem</a>
+            <a href="/import-data.html" class="btn">📊 Import Data</a>
+        </div>
+        
+        <div style="margin-top: 40px; font-size: 0.9em; opacity: 0.8;">
+            <p>Demo Accounts:</p>
+            <p>admin@jpnj.gov.my | AdminPass123!</p>
+            <p>koordinator@jpnj.gov.my | AdminPass123!</p>
+            <p>yayasan@jcorp.com.my | AdminPass123!</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto redirect after 3 seconds
+        setTimeout(() => {
+            window.location.href = '/login/';
+        }, 3000);
+        
+        // Immediate redirect if user clicks anywhere
+        document.addEventListener('click', () => {
+            window.location.href = '/login/';
+        });
+    </script>
+</body>
+</html>
