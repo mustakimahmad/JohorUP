@@ -8,7 +8,7 @@
 
 ### **Template Structure:**
 ```csv
-id,name,ic_number,school_id,form_level,class_name,kodkaum,jantina,phone,parent_phone,address,is_target_student
+id,name,ic_number,school_id,form_level,class_name,kodkaum,jantina,is_target_student
 ```
 
 ## 📋 **Kod Kaum (kodkaum)**
@@ -30,15 +30,15 @@ id,name,ic_number,school_id,form_level,class_name,kodkaum,jantina,phone,parent_p
 ## 📊 **Contoh Template Lengkap:**
 
 ```csv
-id,name,ic_number,school_id,form_level,class_name,kodkaum,jantina,phone,parent_phone,address,is_target_student
-1,Ahmad Bin Abdullah,050101567890,1,4,4 Bestari,M,L,012-3456789,019-8765432,Taman Johor Jaya,TRUE
-2,Siti Nurhaliza Binti Hassan,050102567891,1,4,4 Bestari,M,P,012-3456790,019-8765433,Taman Johor Jaya,TRUE
-3,Lim Wei Ming,050103567892,1,4,4 Cemerlang,C,L,012-3456791,019-8765434,Taman Johor Jaya,TRUE
-4,Tan Mei Ling,050104567893,1,4,4 Cemerlang,C,P,012-3456792,019-8765435,Taman Johor Jaya,TRUE
-5,Raj Kumar A/L Suresh,050105567894,1,5,5 Bestari,I,L,012-3456793,019-8765436,Taman Johor Jaya,TRUE
-6,Priya A/P Raman,050106567895,1,5,5 Bestari,I,P,012-3456794,019-8765437,Taman Johor Jaya,TRUE
-7,John Smith,050107567896,1,5,5 Cemerlang,L,L,012-3456795,019-8765438,Taman Johor Jaya,TRUE
-8,Mary Johnson,050108567897,1,5,5 Cemerlang,L,P,012-3456796,019-8765439,Taman Johor Jaya,TRUE
+id,name,ic_number,school_id,form_level,class_name,kodkaum,jantina,is_target_student
+1,Ahmad Bin Abdullah,050101567890,1,4,4 Bestari,M,L,TRUE
+2,Siti Nurhaliza Binti Hassan,050102567891,1,4,4 Bestari,M,P,TRUE
+3,Lim Wei Ming,050103567892,1,4,4 Cemerlang,C,L,TRUE
+4,Tan Mei Ling,050104567893,1,4,4 Cemerlang,C,P,TRUE
+5,Raj Kumar A/L Suresh,050105567894,1,5,5 Bestari,I,L,TRUE
+6,Priya A/P Raman,050106567895,1,5,5 Bestari,I,P,TRUE
+7,John Smith,050107567896,1,5,5 Cemerlang,L,L,TRUE
+8,Mary Johnson,050108567897,1,5,5 Cemerlang,L,P,TRUE
 ```
 
 ## 📈 **Demographic Distribution (Recommended)**

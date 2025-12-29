@@ -66,8 +66,8 @@ async function importStudents(filePath) {
   for (const student of students) {
     try {
       await pool.query(`
-        INSERT INTO students (ic_number, name, school_id, form_level, class_name, kodkaum, jantina, phone, parent_phone, address, is_target_student)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        INSERT INTO students (ic_number, name, school_id, form_level, class_name, kodkaum, jantina, is_target_student)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (ic_number) DO UPDATE SET
         name = EXCLUDED.name,
         school_id = EXCLUDED.school_id,
@@ -75,9 +75,6 @@ async function importStudents(filePath) {
         class_name = EXCLUDED.class_name,
         kodkaum = EXCLUDED.kodkaum,
         jantina = EXCLUDED.jantina,
-        phone = EXCLUDED.phone,
-        parent_phone = EXCLUDED.parent_phone,
-        address = EXCLUDED.address,
         is_target_student = EXCLUDED.is_target_student
       `, [
         student.ic_number,
@@ -87,9 +84,6 @@ async function importStudents(filePath) {
         student.class_name,
         student.kodkaum,
         student.jantina,
-        student.phone,
-        student.parent_phone,
-        student.address,
         student.is_target_student === 'TRUE' || student.is_target_student === true
       ]);
       

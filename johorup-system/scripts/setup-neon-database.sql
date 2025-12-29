@@ -61,9 +61,6 @@ CREATE TABLE students (
     class_name VARCHAR(50),
     kodkaum VARCHAR(1) CHECK (kodkaum IN ('M', 'C', 'I', 'L')), -- M=Melayu, C=Cina, I=India, L=Lain-lain
     jantina VARCHAR(1) CHECK (jantina IN ('L', 'P')), -- L=Lelaki, P=Perempuan
-    phone VARCHAR(20),
-    parent_phone VARCHAR(20),
-    address TEXT,
     is_target_student BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
