@@ -65,6 +65,38 @@ async function importStudents(filePath) {
   
   for (const student of students) {
     try {
+      // Convert kodkaum from number to letter code
+      let kodkaum = student.kodkaum;
+      if (typeof kodkaum === 'number') {
+        // Map common kodkaum numbers to letters (adjust based on your data)
+        const kodkaumMap = {
+          1: 'M',   // Melayu
+          2: 'C',   // Cina  
+          3: 'I',   // India
+          4: 'L',   // Lain-lain
+          16: 'C',  // Based on sample data
+          // Add more mappings as needed
+        };
+        kodkaum = kodkaumMap[kodkaum] || 'M'; // Default to Melayu if unknown
+      }
+      
+      // Convert jantina to single letter
+      let jantina = student.jantina;
+      if (jantina === 'LELAKI') jantina = 'L';
+      else if (jantina === 'PEREMPUAN') jantina = 'P';
+      else if (typeof jantina === 'string' && jantina.length > 1) {
+        jantina = jantina.charAt(0).toUpperCase(); // Take first letter
+      }
+      
+      // Convert IC number to string
+      const icNumber = String(student.ic_number);
+      
+      // Convert form_level to 4 or 5
+      let formLevel = student.form_level;
+      if (formLevel === 200 || formLevel > 10) {
+        formLevel = 4; // Default to Form 4 for unusual values
+      }
+      
       await pool.query(`
         INSERT INTO students (ic_number, name, school_id, form_level, class_name, kodkaum, jantina, is_target_student)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -77,17 +109,17 @@ async function importStudents(filePath) {
         jantina = EXCLUDED.jantina,
         is_target_student = EXCLUDED.is_target_student
       `, [
-        student.ic_number,
+        icNumber,
         student.name,
         student.school_id,
-        student.form_level,
+        formLevel,
         student.class_name,
-        student.kodkaum,
-        student.jantina,
+        kodkaum,
+        jantina,
         student.is_target_student === 'TRUE' || student.is_target_student === true
       ]);
       
-      console.log(`✅ Imported student: ${student.name}`);
+      console.log(`✅ Imported student: ${student.name} (${kodkaum}/${jantina})`);
     } catch (error) {
       console.error(`❌ Error importing student ${student.name}:`, error.message);
     }
