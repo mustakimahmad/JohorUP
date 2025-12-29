@@ -1,0 +1,31 @@
+id,name,ic_number,school_id,form_level,class_name,kodkaum,jantina,phone,parent_phone,address,is_target_student
+1,Ahmad Bin Abdullah,050101567890,1,4,4 Bestari,M,L,012-3456789,019-8765432,Taman Johor Jaya,TRUE
+2,Siti Nurhaliza Binti Hassan,050102567891,1,4,4 Bestari,M,P,012-3456790,019-8765433,Taman Johor Jaya,TRUE
+3,Muhammad Hakim Bin Omar,050103567892,1,4,4 Cemerlang,M,L,012-3456791,019-8765434,Taman Johor Jaya,TRUE
+4,Nurul Ain Fatihah Binti Ali,050104567893,1,4,4 Cemerlang,M,P,012-3456792,019-8765435,Taman Johor Jaya,TRUE
+5,Mohd Fikri Hakim Bin Rahman,050105567894,1,5,5 Bestari,M,L,012-3456793,019-8765436,Taman Johor Jaya,TRUE
+6,Aishah Binti Yusof,050106567895,1,5,5 Bestari,M,P,012-3456794,019-8765437,Taman Johor Jaya,TRUE
+7,Hafiz Bin Rahman,050107567896,1,5,5 Cemerlang,M,L,012-3456795,019-8765438,Taman Johor Jaya,TRUE
+8,Zarina Binti Hassan,050108567897,1,5,5 Cemerlang,M,P,012-3456796,019-8765439,Taman Johor Jaya,TRUE
+9,Raj Kumar A/L Suresh,050109567898,1,4,4 Bestari,I,L,012-3456797,019-8765440,Taman Johor Jaya,TRUE
+10,Priya A/P Raman,050110567899,1,4,4 Bestari,I,P,012-3456798,019-8765441,Taman Johor Jaya,TRUE
+11,Lim Wei Ming,050111567800,1,4,4 Cemerlang,C,L,012-3456799,019-8765442,Taman Johor Jaya,TRUE
+12,Tan Mei Ling,050112567801,1,4,4 Cemerlang,C,P,012-3456800,019-8765443,Taman Johor Jaya,TRUE
+13,Wong Kar Wai,050113567802,1,5,5 Bestari,C,L,012-3456801,019-8765444,Taman Johor Jaya,TRUE
+14,Lee Siew Choo,050114567803,1,5,5 Bestari,C,P,012-3456802,019-8765445,Taman Johor Jaya,TRUE
+15,Farid Bin Ahmad,050115567804,1,5,5 Cemerlang,M,L,012-3456803,019-8765446,Taman Johor Jaya,TRUE
+16,Nadia Binti Omar,050116567805,1,5,5 Cemerlang,M,P,012-3456804,019-8765447,Taman Johor Jaya,TRUE
+45,Ahmad Faiz Bin Hassan,050201567890,2,4,4 Bestari,M,L,012-4567890,019-9876543,Bandar Baru UDA,TRUE
+46,Siti Hajar Binti Rahman,050202567891,2,4,4 Bestari,M,P,012-4567891,019-9876544,Bandar Baru UDA,TRUE
+47,Muhammad Azim Bin Ali,050203567892,2,4,4 Cemerlang,M,L,012-4567892,019-9876545,Bandar Baru UDA,TRUE
+48,Nurul Hidayah Binti Yusof,050204567893,2,4,4 Cemerlang,M,P,012-4567893,019-9876546,Bandar Baru UDA,TRUE
+49,Mohd Arif Bin Omar,050205567894,2,5,5 Bestari,M,L,012-4567894,019-9876547,Bandar Baru UDA,TRUE
+50,Fatimah Binti Ahmad,050206567895,2,5,5 Bestari,M,P,012-4567895,019-9876548,Bandar Baru UDA,TRUE
+51,Suresh A/L Kumar,050207567896,2,5,5 Cemerlang,I,L,012-4567896,019-9876549,Bandar Baru UDA,TRUE
+52,Kavitha A/P Raj,050208567897,2,5,5 Cemerlang,I,P,012-4567897,019-9876550,Bandar Baru UDA,TRUE
+53,Chen Wei Jie,050209567898,2,4,4 Bestari,C,L,012-4567898,019-9876551,Bandar Baru UDA,TRUE
+54,Loh Pei Shan,050210567899,2,4,4 Bestari,C,P,012-4567899,019-9876552,Bandar Baru UDA,TRUE
+89,Ahmad Zaki Bin Rahman,050301567890,3,4,4 Bestari,M,L,012-5678901,019-1987654,Taman Universiti,TRUE
+90,Siti Mariam Binti Hassan,050302567891,3,4,4 Bestari,M,P,012-5678902,019-1987655,Taman Universiti,TRUE
+91,Muhammad Irfan Bin Ali,050303567892,3,4,4 Cemerlang,M,L,012-5678903,019-1987656,Taman Universiti,TRUE
+92,Nurul Izzah Binti Omar,050304567893,3,4,4 Cemerlang,M,P,012-5678904,019-1987657,Taman Universiti,TRUE

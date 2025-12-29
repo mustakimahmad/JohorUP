@@ -1,0 +1,21 @@
+id,name,code,ppd_id,address,phone,email,principal_name,target_students
+1,SMK Taman Johor Jaya,SMKTJJ,1,"Taman Johor Jaya, 81100 Johor Bahru",07-3551234,smktjj@moe-dl.edu.my,Puan Siti Aminah Binti Ahmad,44
+2,SMK Bandar Baru UDA,SMKBBUDA,1,"Bandar Baru UDA, 81200 Johor Bahru",07-5561234,smkbbuda@moe-dl.edu.my,Encik Ahmad Rahman Bin Hassan,44
+3,SMK Taman Universiti,SMKTU,1,"Taman Universiti, 81300 Skudai",07-5201234,smktu@moe-dl.edu.my,Puan Noraini Hassan Binti Omar,44
+4,SMK Skudai,SMKSKUDAI,1,"Skudai, 81300 Johor Bahru",07-5511234,smkskudai@moe-dl.edu.my,Encik Mohd Ali Bin Yusof,44
+5,SMK Kulai,SMKKULAI,1,"Kulai, 81000 Kulai",07-6631234,smkkulai@moe-dl.edu.my,Puan Fatimah Zahra Binti Ibrahim,44
+6,SMK Senai,SMKSENAI,1,"Senai, 81400 Senai",07-5991234,smksenai@moe-dl.edu.my,Encik Ibrahim Ismail Bin Ahmad,44
+7,SMK Gelang Patah,SMKGP,1,"Gelang Patah, 81550 Gelang Patah",07-2871234,smkgp@moe-dl.edu.my,Puan Rozita Ahmad Binti Mahmud,44
+8,SMK Nusajaya,SMKNUSAJAYA,1,"Nusajaya, 79150 Nusajaya",07-2331234,smknusajaya@moe-dl.edu.my,Encik Hassan Abdullah Bin Razak,44
+9,SMK Muar,SMKMUAR,2,"Muar, 84000 Muar",06-9521234,smkmuar@moe-dl.edu.my,Puan Zainab Mohd Binti Ali,44
+10,SMK Tangkak,SMKTANGKAK,2,"Tangkak, 84900 Tangkak",06-9781234,smktangkak@moe-dl.edu.my,Encik Roslan Yusof Bin Hassan,44
+11,SMK Segamat,SMKSEGAMAT,2,"Segamat, 85000 Segamat",07-9311234,smksegamat@moe-dl.edu.my,Puan Mariam Salleh Binti Omar,44
+12,SMK Pagoh,SMKPAGOH,2,"Pagoh, 84600 Pagoh",06-9741234,smkpagoh@moe-dl.edu.my,Encik Azman Hashim Bin Rahman,44
+13,SMK Bukit Gambir,SMKBG,2,"Bukit Gambir, 84800 Bukit Gambir",06-9661234,smkbg@moe-dl.edu.my,Puan Khadijah Omar Binti Yusof,44
+14,SMK Ledang,SMKLEDANG,2,"Ledang, 84900 Ledang",06-9881234,smkledang@moe-dl.edu.my,Encik Sulaiman Mat Bin Ahmad,44
+15,SMK Batu Pahat,SMKBP,3,"Batu Pahat, 83000 Batu Pahat",07-4341234,smkbp@moe-dl.edu.my,Puan Rohani Daud Binti Hassan,44
+16,SMK Yong Peng,SMKYP,3,"Yong Peng, 83700 Yong Peng",07-4671234,smkyp@moe-dl.edu.my,Encik Kamal Ariffin Bin Omar,44
+17,SMK Ayer Hitam,SMKAH,3,"Ayer Hitam, 86100 Ayer Hitam",07-7571234,smkah@moe-dl.edu.my,Puan Norsiah Jamil Binti Ali,44
+18,SMK Senggarang,SMKSENGGARANG,3,"Senggarang, 83200 Senggarang",07-4551234,smksenggarang@moe-dl.edu.my,Encik Razak Mahmud Bin Yusof,44
+19,SMK Rengit,SMKRENGIT,3,"Rengit, 83300 Rengit",07-4881234,smkrengit@moe-dl.edu.my,Puan Salina Kassim Binti Rahman,44
+20,SMK Parit Raja,SMKPR,3,"Parit Raja, 86400 Parit Raja",07-4531234,smkpr@moe-dl.edu.my,Encik Hafiz Rahman Bin Hassan,44

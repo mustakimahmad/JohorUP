@@ -8,14 +8,11 @@ export function middleware(request: NextRequest) {
   const publicRoutes = [
     '/',
     '/login',
-    '/auth/error',
-    '/auth/pending-approval',
     '/maintenance'
   ]
   
   // API routes that don't require authentication
   const publicApiRoutes = [
-    '/api/auth',
     '/api/health'
   ]
   
@@ -36,8 +33,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
-  // For protected routes, let NextAuth handle authentication
-  // This middleware will just handle basic routing
+  // For protected routes, authentication is handled client-side with localStorage
   return NextResponse.next()
 }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signIn, getSession } from 'next-auth/react';
+import { loginUser, getCurrentUser } from '@/lib/localStorage-auth';
 import Logo from '@/components/Logo';
 
 function LoginForm() {
@@ -17,11 +17,10 @@ function LoginForm() {
 
   useEffect(() => {
     // Check if already logged in
-    getSession().then((session) => {
-      if (session) {
-        router.push(callbackUrl);
-      }
-    });
+    const user = getCurrentUser();
+    if (user) {
+      router.push(callbackUrl);
+    }
   }, [router, callbackUrl]);
 
   const handleManualSubmit = async (e: React.FormEvent) => {
@@ -30,16 +29,11 @@ function LoginForm() {
     setError('');
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
-      });
-
-      if (result?.error) {
-        setError('Email atau kata laluan tidak sah');
-      } else if (result?.ok) {
+      const user = loginUser(email, password);
+      if (user) {
         router.push(callbackUrl);
+      } else {
+        setError('Email atau kata laluan tidak sah');
       }
     } catch (error) {
       console.error('Manual login error:', error);

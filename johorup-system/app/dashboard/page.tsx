@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { getCurrentUser, logoutUser } from '@/lib/localStorage-auth';
 import { mockDashboardStats, mockPrograms, mockBudget, mockTeachers, mockTeacherKPIs } from '@/lib/mockData';
 import { exportStudentsToExcel, exportProgressToExcel, exportProgramSummaryToExcel } from '@/lib/excelExport';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -10,21 +10,27 @@ import NavigationBar from '@/components/NavigationBar';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const stats = mockDashboardStats;
 
   useEffect(() => {
-    if (status === 'loading') return; // Still loading
-    if (!session) {
+    // Check if user is logged in via localStorage
+    const user = getCurrentUser();
+    if (user) {
+      setUser(user);
+    } else {
       router.push('/login');
     }
-  }, [session, status, router]);
+    setIsLoading(false);
+  }, [router]);
 
   const handleLogout = () => {
-    router.push('/api/auth/signout');
+    logoutUser();
+    router.push('/login');
   };
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -35,9 +41,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!session) return null;
-
-  const user = session.user;
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">

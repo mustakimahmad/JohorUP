@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/localStorage-auth';
 import DashboardHeader from '@/components/DashboardHeader';
 import NavigationBar from '@/components/NavigationBar';
 
@@ -15,15 +16,14 @@ export default function MaintenanceControlPage() {
   const [pendingAction, setPendingAction] = useState<'enable' | 'disable' | null>(null);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
       // Only allow coordinators (sektor_perancangan)
-      if (parsedUser.role !== 'sektor_perancangan') {
+      if (user.role !== 'sektor_perancangan') {
         router.push('/dashboard');
       }
     }

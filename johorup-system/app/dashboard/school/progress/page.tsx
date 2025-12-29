@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/localStorage-auth';
 import { mockStudents, mockGrades, mockSubjects, mockSchools } from '@/lib/mockData';
 import { Student, StudentGrade } from '@/lib/types';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -13,15 +14,14 @@ export default function SchoolProgressPage() {
   const [selectedSubject, setSelectedSubject] = useState<number>(0); // 0 = all subjects
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
       // Redirect non-school users
-      if (parsedUser.role !== 'school') {
+      if (user.role !== 'school') {
         router.push('/dashboard');
       }
     }

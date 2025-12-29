@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/localStorage-auth';
 import { mockDashboardStats } from '@/lib/mockData';
 import DashboardHeader from '@/components/DashboardHeader';
 import NavigationBar from '@/components/NavigationBar';
@@ -84,15 +85,14 @@ export default function YayasanOverviewPage() {
   });
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
       // Only allow Yayasan JCorp role
-      if (parsedUser.role !== 'yayasan_jcorp') {
+      if (user.role !== 'yayasan_jcorp') {
         router.push('/dashboard');
       }
     }

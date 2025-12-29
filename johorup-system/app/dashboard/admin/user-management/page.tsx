@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { approveUser } from '@/lib/auth'
 
 interface PendingUser {
   id: number

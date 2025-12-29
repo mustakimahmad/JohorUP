@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/localStorage-auth';
 import { mockStudents, mockGrades, mockSchools, mockSubjects } from '@/lib/mockData';
 import { exportStudentsToExcel } from '@/lib/excelExport';
 
@@ -11,15 +12,14 @@ export default function SchoolStudentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
       // Redirect if not school role
-      if (!parsedUser.email.includes('sekolah')) {
+      if (!user.email.includes('sekolah')) {
         router.push('/dashboard');
       }
     }

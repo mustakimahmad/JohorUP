@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/localStorage-auth';
 import { mockPrograms, mockSubjects, mockSchools, mockStudents, mockTeachers } from '@/lib/mockData';
 import DashboardHeader from '@/components/DashboardHeader';
 import NavigationBar from '@/components/NavigationBar';
@@ -37,14 +38,13 @@ export default function TuitionReportPage() {
   const [studentAbsenceReasons, setStudentAbsenceReasons] = useState<{[key: number]: string}>({});
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
-      if (parsedUser.role !== 'school') {
+      if (user.role !== 'school') {
         router.push('/dashboard');
       }
 

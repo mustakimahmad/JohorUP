@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser, logoutUser } from '@/lib/localStorage-auth';
 import { mockStudents, mockProgramReports, mockStudentAttendance, mockProgramPhotos, mockPrograms, mockSchools } from '@/lib/mockData';
 import DashboardHeader from '@/components/DashboardHeader';
 import NavigationBar from '@/components/NavigationBar';
@@ -11,22 +12,21 @@ export default function SchoolDashboardPage() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
       // Redirect non-school users
-      if (parsedUser.role !== 'school') {
+      if (user.role !== 'school') {
         router.push('/dashboard');
       }
     }
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
+    logoutUser();
     router.push('/login');
   };
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/localStorage-auth';
 import { mockPrograms, mockProgramReports, mockStudentAttendance, mockProgramPhotos, mockStudents, mockSubjects } from '@/lib/mockData';
 import { ProgramReport, StudentAttendance, ProgramPhoto } from '@/lib/types';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -31,16 +32,15 @@ export default function SchoolReportsPage() {
   const [photoCaptions, setPhotoCaptions] = useState<string[]>(['', '', '']);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const user = getCurrentUser();
+    if (!user) {
       router.push('/login');
     } else {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
+      setUser(user);
       
       // Initialize attendance data for school students
-      if (parsedUser.school_id) {
-        const schoolStudents = mockStudents.filter(s => s.school_id === parsedUser.school_id);
+      if (user.school_id) {
+        const schoolStudents = mockStudents.filter(s => s.school_id === user.school_id);
         const initialAttendance: {[key: number]: {present: boolean, notes: string}} = {};
         schoolStudents.forEach(student => {
           initialAttendance[student.id] = { present: true, notes: '' };
