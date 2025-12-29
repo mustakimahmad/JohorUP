@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - JohorUP System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .logo p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="email"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .demo-accounts {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .demo-accounts h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .account {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .account:hover {
+            background: #e9ecef;
+        }
+        
+        .account strong {
+            color: #667eea;
+        }
+        
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .success {
+            color: #155724;
+            margin-top: 10px;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>🎓 JohorUP</h1>
+            <p>Sistem Pengurusan Program Tuisyen Johor</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Kata Laluan:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">
+                🔐 Log Masuk
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Sedang log masuk...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        
+        <div class="demo-accounts">
+            <h3>📋 Demo Accounts:</h3>
+            
+            <div class="account" onclick="fillLogin('admin@jpnj.gov.my', 'AdminPass123!')">
+                <strong>Admin JPNJ</strong><br>
+                admin@jpnj.gov.my
+            </div>
+            
+            <div class="account" onclick="fillLogin('koordinator@jpnj.gov.my', 'AdminPass123!')">
+                <strong>Koordinator Program</strong><br>
+                koordinator@jpnj.gov.my
+            </div>
+            
+            <div class="account" onclick="fillLogin('yayasan@jcorp.com.my', 'AdminPass123!')">
+                <strong>Yayasan JCorp</strong><br>
+                yayasan@jcorp.com.my
+            </div>
+            
+            <div class="account" onclick="fillLogin('ppd.j010@moe.gov.my', 'AdminPass123!')">
+                <strong>PPD J010</strong><br>
+                ppd.j010@moe.gov.my
+            </div>
+        </div>
+        
+        <div class="links">
+            <a href="/import-data.html">📊 Import Data</a>
+            <a href="/">🏠 Homepage</a>
+        </div>
+    </div>
+
+    <script>
+        // Mock user database (localStorage based)
+        const users = [
+            { email: 'admin@jpnj.gov.my', password: 'AdminPass123!', name: 'Admin JPNJ', role: 'sektor_perancangan' },
+            { email: 'koordinator@jpnj.gov.my', password: 'AdminPass123!', name: 'Koordinator Program', role: 'sektor_perancangan' },
+            { email: 'yayasan@jcorp.com.my', password: 'AdminPass123!', name: 'Yayasan JCorp', role: 'yayasan_jcorp' },
+            { email: 'ppd.j010@moe.gov.my', password: 'AdminPass123!', name: 'PPD J010', role: 'ppd' },
+            { email: 'ppd.j020@moe.gov.my', password: 'AdminPass123!', name: 'PPD J020', role: 'ppd' },
+            { email: 'ppd.j030@moe.gov.my', password: 'AdminPass123!', name: 'PPD J030', role: 'ppd' }
+        ];
+        
+        function fillLogin(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success').style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+        }
+        
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('loginBtn').disabled = show;
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            showLoading(true);
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    // Store user in localStorage
+                    localStorage.setItem('johorup_user', JSON.stringify({
+                        email: user.email,
+                        name: user.name,
+                        role: user.role,
+                        loginTime: new Date().toISOString()
+                    }));
+                    
+                    showSuccess(`Login berjaya! Selamat datang ${user.name}`);
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        // Try to redirect to dashboard, fallback to success page
+                        window.location.href = '/dashboard.html';
+                    }, 2000);
+                    
+                } else {
+                    showError('Email atau kata laluan tidak sah. Sila cuba lagi.');
+                }
+                
+                showLoading(false);
+            }, 1000);
+        });
+        
+        // Check if already logged in
+        const currentUser = localStorage.getItem('johorup_user');
+        if (currentUser) {
+            const user = JSON.parse(currentUser);
+            showSuccess(`Anda sudah log masuk sebagai ${user.name}`);
+            
+            // Add logout option
+            setTimeout(() => {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.textContent = '🚪 Log Keluar';
+                logoutBtn.className = 'login-btn';
+                logoutBtn.style.marginTop = '10px';
+                logoutBtn.style.background = '#dc3545';
+                logoutBtn.onclick = function() {
+                    localStorage.removeItem('johorup_user');
+                    location.reload();
+                };
+                document.querySelector('.login-container').appendChild(logoutBtn);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
