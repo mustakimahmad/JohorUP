@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Optimize for production with Netlify static export
+  // Optimize for production with Netlify
   reactStrictMode: true,
   
-  // Enable static export for Netlify
-  output: 'export',
-  trailingSlash: true,
+  // Remove static export to enable API routes and functions
+  // output: 'export', // Disabled to enable functions
+  trailingSlash: false,
   
   // Image optimization
   images: {

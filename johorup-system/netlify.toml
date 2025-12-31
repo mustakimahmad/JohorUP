@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "out"
+  publish = ".next"
   functions = "netlify/functions"
 
 [build.environment]
@@ -18,14 +18,13 @@
   to = "/.netlify/functions/api-:splat"
   status = 200
 
-# Direct function access
+# Next.js pages and assets
 [[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
+  from = "/_next/*"
+  to = "/_next/:splat"
   status = 200
-  force = true
 
-# SPA redirect for client-side routing (lowest priority)
+# SPA redirect for client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
