@@ -1,6 +1,4 @@
 // API endpoint for testing database connection
-const { Pool } = require('pg');
-
 exports.handler = async (event, context) => {
   // Set CORS headers
   const headers = {
@@ -39,6 +37,25 @@ exports.handler = async (event, context) => {
 
     console.log('Attempting database connection...');
     
+    // Import pg dynamically to handle potential missing dependency
+    let Pool;
+    try {
+      const pg = require('pg');
+      Pool = pg.Pool;
+    } catch (pgError) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          status: 'error',
+          error: 'pg package not available',
+          message: 'PostgreSQL client library not found in Netlify function',
+          suggestion: 'pg package needs to be installed in function dependencies',
+          timestamp: new Date().toISOString()
+        })
+      };
+    }
+
     const pool = new Pool({
       connectionString: databaseUrl,
       ssl: { rejectUnauthorized: false },
@@ -81,7 +98,8 @@ exports.handler = async (event, context) => {
         code: error.code,
         message: 'Database connection failed',
         environment: process.env.NODE_ENV || 'production',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        stack: error.stack
       })
     };
   }

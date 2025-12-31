@@ -49,6 +49,7 @@
             <button onclick="testDirectFunction()">Test Direct Function</button>
             <button onclick="testSimpleFunction()">Test Simple Function</button>
             <button onclick="testAPIRoute()">Test API Route</button>
+            <button onclick="initializeDatabase()">Initialize Database</button>
             <button onclick="clearResults()">Clear Results</button>
         </div>
         
@@ -203,6 +204,44 @@
                 resultsDiv.innerHTML = `
                     <div class="status error">
                         ❌ API route request failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function initializeDatabase() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Initializing database...</div>';
+            
+            try {
+                const response = await fetch('/api/init-database', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Database initialized successfully!
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Database initialization failed
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Database initialization request failed: ${error.message}
                     </div>
                 `;
             }
