@@ -1,12 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Optimize for production with Vercel
+  // Optimize for production with Netlify static export
   reactStrictMode: true,
   
-  // Remove static export - use server-side rendering
-  // output: 'export',
-  // trailingSlash: true,
+  // Enable static export for Netlify
+  output: 'export',
+  trailingSlash: true,
   
   // Image optimization
   images: {

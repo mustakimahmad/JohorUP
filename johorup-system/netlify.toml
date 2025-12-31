@@ -6,22 +6,8 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Force redirect root to static login
+# SPA redirect for client-side routing
 [[redirects]]
-  from = "/"
-  to = "/login-static.html"
-  status = 302
-  force = true
-
-# Redirect login to static version
-[[redirects]]
-  from = "/login"
-  to = "/login-static.html"
-  status = 302
-  force = true
-
-# SPA redirect for dashboard pages
-[[redirects]]
-  from = "/dashboard/*"
+  from = "/*"
   to = "/index.html"
   status = 200
