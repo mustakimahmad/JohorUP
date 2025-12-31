@@ -19,21 +19,24 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Check if DATABASE_URL is available
-    if (!process.env.DATABASE_URL) {
+    // Use NETLIFY_DATABASE_URL which is already configured
+    const databaseUrl = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
+    
+    if (!databaseUrl) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           status: 'error',
-          error: 'DATABASE_URL environment variable not configured',
-          message: 'Please configure DATABASE_URL in Netlify environment variables'
+          error: 'Database URL not configured',
+          message: 'Neither NETLIFY_DATABASE_URL nor DATABASE_URL found',
+          availableEnvVars: Object.keys(process.env).filter(key => key.includes('DATABASE')).join(', ')
         })
       };
     }
 
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: databaseUrl,
       ssl: { rejectUnauthorized: false }
     });
 
@@ -52,7 +55,8 @@ exports.handler = async (event, context) => {
         version: result.rows[0].pg_version,
         queryTime: `${queryTime}ms`,
         environment: process.env.NODE_ENV || 'production',
-        database: 'Neon PostgreSQL'
+        database: 'Neon PostgreSQL',
+        connectionUsed: databaseUrl ? 'NETLIFY_DATABASE_URL' : 'DATABASE_URL'
       })
     };
 
