@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test - JohorUP</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover { background: #0056b3; }
+        .demo-users {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .demo-user {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .demo-user:last-child { border-bottom: none; }
+        .use-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Login Test - JohorUP</h1>
+        <p>Test database authentication dengan demo users</p>
+        
+        <div class="login-form">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        
+        <div class="demo-users">
+            <h3>Demo Users (Click "Use" to auto-fill)</h3>
+            
+            <div class="demo-user">
+                <div>
+                    <strong>Super Admin S4PD</strong><br>
+                    <small>admin@s4pd.gov.my / admin123</small>
+                </div>
+                <button class="use-btn" onclick="useCredentials('admin@s4pd.gov.my', 'admin123')">Use</button>
+            </div>
+            
+            <div class="demo-user">
+                <div>
+                    <strong>Admin SPB</strong><br>
+                    <small>spb.admin@jpnj.gov.my / spb123</small>
+                </div>
+                <button class="use-btn" onclick="useCredentials('spb.admin@jpnj.gov.my', 'spb123')">Use</button>
+            </div>
+            
+            <div class="demo-user">
+                <div>
+                    <strong>Strategic JCorp</strong><br>
+                    <small>strategic@jcorp.com.my / jcorp123</small>
+                </div>
+                <button class="use-btn" onclick="useCredentials('strategic@jcorp.com.my', 'jcorp123')">Use</button>
+            </div>
+            
+            <div class="demo-user">
+                <div>
+                    <strong>PPD Johor Bahru</strong><br>
+                    <small>ppd.jb@jpnj.gov.my / ppd123</small>
+                </div>
+                <button class="use-btn" onclick="useCredentials('ppd.jb@jpnj.gov.my', 'ppd123')">Use</button>
+            </div>
+            
+            <div class="demo-user">
+                <div>
+                    <strong>Sekolah Demo</strong><br>
+                    <small>school.demo@jpnj.gov.my / school123</small>
+                </div>
+                <button class="use-btn" onclick="useCredentials('school.demo@jpnj.gov.my', 'school123')">Use</button>
+            </div>
+            
+            <div class="demo-user">
+                <div>
+                    <strong>Guru Matematik</strong><br>
+                    <small>teacher.math@jpnj.gov.my / teacher123</small>
+                </div>
+                <button class="use-btn" onclick="useCredentials('teacher.math@jpnj.gov.my', 'teacher123')">Use</button>
+            </div>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function useCredentials(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Logging in...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Login successful! Welcome ${data.user.name}
+                        </div>
+                        <h4>User Details:</h4>
+                        <pre>${JSON.stringify(data.user, null, 2)}</pre>
+                        <p><strong>Next:</strong> User data akan disimpan dalam localStorage dan redirect ke dashboard.</p>
+                    `;
+                    
+                    // Store user data in localStorage (like the real app)
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Login failed: ${data.error || 'Unknown error'}
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Request failed: ${error.message}
+                    </div>
+                `;
+            }
+        });
+        
+        // Auto-fill first demo user on page load
+        window.onload = function() {
+            useCredentials('admin@s4pd.gov.my', 'admin123');
+        };
+    </script>
+</body>
+</html>
