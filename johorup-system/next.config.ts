@@ -4,9 +4,9 @@ const nextConfig: NextConfig = {
   // Optimize for production with Netlify
   reactStrictMode: true,
   
-  // Remove static export to enable API routes and functions
-  // output: 'export', // Disabled to enable functions
-  trailingSlash: false,
+  // Keep static export but allow API routes through Netlify functions
+  output: 'export',
+  trailingSlash: true,
   
   // Image optimization
   images: {
