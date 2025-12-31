@@ -47,6 +47,8 @@
         <div>
             <button onclick="testDatabase()">Test Database Connection</button>
             <button onclick="testDirectFunction()">Test Direct Function</button>
+            <button onclick="testSimpleFunction()">Test Simple Function</button>
+            <button onclick="testAPIRoute()">Test API Route</button>
             <button onclick="clearResults()">Clear Results</button>
         </div>
         
@@ -130,13 +132,89 @@
             }
         }
         
+        async function testSimpleFunction() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Testing simple function...</div>';
+            
+            try {
+                const response = await fetch('/.netlify/functions/test-simple', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Simple function working!
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Simple function failed
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Simple function request failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function testAPIRoute() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status loading">🔄 Testing API route...</div>';
+            
+            try {
+                const response = await fetch('/api/test-simple', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ API route working!
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ API route failed
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ API route request failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
         function clearResults() {
             document.getElementById('results').innerHTML = '';
         }
         
         // Auto-test on page load
         window.onload = function() {
-            setTimeout(testDatabase, 1000);
+            setTimeout(testSimpleFunction, 1000);
         };
     </script>
 </body>

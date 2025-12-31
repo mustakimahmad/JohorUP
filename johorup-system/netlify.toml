@@ -7,10 +7,23 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# API routes to Netlify functions (highest priority)
+# Netlify Functions - HIGHEST PRIORITY (must come first)
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# API routes to Netlify functions
 [[redirects]]
   from = "/api/test-db"
   to = "/.netlify/functions/api-test-db"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/test-simple"
+  to = "/.netlify/functions/test-simple"
   status = 200
   force = true
 
@@ -20,7 +33,7 @@
   status = 200
   force = true
 
-# Static files should not be redirected
+# Static files (specific extensions)
 [[redirects]]
   from = "/*.html"
   to = "/:splat.html"
@@ -36,14 +49,20 @@
   to = "/:splat.css"
   status = 200
 
-# Next.js pages and assets
+[[redirects]]
+  from = "/*.json"
+  to = "/:splat.json"
+  status = 200
+
+# Next.js static assets
 [[redirects]]
   from = "/_next/*"
   to = "/_next/:splat"
   status = 200
 
-# SPA redirect for client-side routing (lowest priority)
+# SPA redirect for client-side routing (LOWEST PRIORITY - exclude functions)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  conditions = {Role = ["!function"]}
