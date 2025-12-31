@@ -48,7 +48,7 @@ exports.handler = async (event, context) => {
     const client = await pool.connect();
 
     try {
-      // Create users table
+      // Create users table first
       await client.query(`
         CREATE TABLE IF NOT EXISTS users (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -159,27 +159,40 @@ exports.handler = async (event, context) => {
         }
       }
 
-      // Create audit logs table
+      // Create audit logs table AFTER users are inserted
       await client.query(`
         CREATE TABLE IF NOT EXISTS audit_logs (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID REFERENCES users(id),
+          user_id UUID,
           action VARCHAR(100) NOT NULL,
           resource VARCHAR(100) NOT NULL,
           details JSONB,
           ip_address INET,
           user_agent TEXT,
-          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         )
       `);
 
       // Create initial audit log
-      await client.query(
-        `INSERT INTO audit_logs (user_id, action, resource, details) 
-         VALUES ((SELECT id FROM users WHERE email = 'admin@s4pd.gov.my'), 
-                 'SYSTEM_SETUP', 'DATABASE', 
-                 '{"message": "Database initialized successfully", "timestamp": "${new Date().toISOString()}"}')`,
+      const adminUser = await client.query(
+        `SELECT id FROM users WHERE email = 'admin@s4pd.gov.my' LIMIT 1`
       );
+      
+      if (adminUser.rows.length > 0) {
+        await client.query(
+          `INSERT INTO audit_logs (user_id, action, resource, details) 
+           VALUES ($1, 'SYSTEM_SETUP', 'DATABASE', $2)`,
+          [
+            adminUser.rows[0].id,
+            JSON.stringify({
+              message: "Database initialized successfully",
+              timestamp: new Date().toISOString(),
+              usersCreated: insertedUsers
+            })
+          ]
+        );
+      }
 
       client.release();
       await pool.end();
