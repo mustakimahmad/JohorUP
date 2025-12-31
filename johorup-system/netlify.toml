@@ -7,13 +7,7 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Netlify Functions - HIGHEST PRIORITY
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# API routes to Netlify functions
+# API routes to Netlify functions (HIGHEST PRIORITY)
 [[redirects]]
   from = "/api/test-simple"
   to = "/.netlify/functions/test-simple"
