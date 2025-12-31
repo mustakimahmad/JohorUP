@@ -6,6 +6,12 @@
   NODE_VERSION = "22"
   NPM_FLAGS = "--legacy-peer-deps"
 
+# Disable Next.js plugin to avoid conflicts with static export
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    disable = true
+
 # SPA redirect for client-side routing
 [[redirects]]
   from = "/*"
