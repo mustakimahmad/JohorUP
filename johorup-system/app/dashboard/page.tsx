@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, logoutUser } from '@/lib/localStorage-auth';
+// Database authentication instead of localStorage
+// import { getCurrentUser, logoutUser } from '@/lib/localStorage-auth';
 import { mockDashboardStats, mockPrograms, mockBudget, mockTeachers, mockTeacherKPIs } from '@/lib/mockData';
 import { exportStudentsToExcel, exportProgressToExcel, exportProgramSummaryToExcel } from '@/lib/excelExport';
 import DashboardHeader from '@/components/DashboardHeader';
@@ -15,10 +16,10 @@ export default function DashboardPage() {
   const stats = mockDashboardStats;
 
   useEffect(() => {
-    // Check if user is logged in via localStorage
-    const user = getCurrentUser();
-    if (user) {
-      setUser(user);
+    // Check if user is logged in via sessionStorage
+    const userData = sessionStorage.getItem('currentUser');
+    if (userData) {
+      setUser(JSON.parse(userData));
     } else {
       router.push('/login');
     }
@@ -26,7 +27,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = () => {
-    logoutUser();
+    sessionStorage.removeItem('currentUser');
     router.push('/login');
   };
 
@@ -52,8 +53,8 @@ export default function DashboardPage() {
         onLogout={handleLogout}
       >
         <div className="flex gap-1 sm:gap-2 flex-wrap">
-          {/* Admin Template Link - Only for Koordinator */}
-          {(user as any).role === 'sektor_perancangan' && (
+          {/* Admin Template Link - Only for Admin */}
+          {(user as any).role === 'admin' && (
             <button 
               onClick={() => router.push('/dashboard/admin')}
               className="px-2 sm:px-3 py-2 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-1 whitespace-nowrap"
@@ -200,60 +201,68 @@ export default function DashboardPage() {
           {/* Progress Trend Chart */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Trend Perkembangan Murid</h3>
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Tingkatan 4 (Nov 2025)</span>
-                  <span className="text-sm font-semibold text-gray-900">42.0%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-6">
-                  <div className="bg-orange-500 h-6 rounded-full flex items-center justify-end pr-2" style={{ width: '42%' }}>
-                    <span className="text-xs font-semibold text-white">42%</span>
+            <div className="text-center py-8">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">Tiada Data Perkembangan</h4>
+              <p className="text-gray-600 mb-4">Belum ada data murid untuk menunjukkan trend perkembangan.</p>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-400">Tingkatan 4 (Nov 2025)</span>
+                    <span className="text-sm font-semibold text-gray-400">0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6">
+                    <div className="bg-gray-300 h-6 rounded-full flex items-center justify-center" style={{ width: '100%' }}>
+                      <span className="text-xs font-semibold text-gray-500">Tiada Data</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Pertengahan Tahun (Mei 2026)</span>
-                  <span className="text-sm font-semibold text-gray-900">52.5%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-6">
-                  <div className="bg-yellow-500 h-6 rounded-full flex items-center justify-end pr-2" style={{ width: '52.5%' }}>
-                    <span className="text-xs font-semibold text-white">52.5%</span>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-400">Pertengahan Tahun (Mei 2026)</span>
+                    <span className="text-sm font-semibold text-gray-400">0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6">
+                    <div className="bg-gray-300 h-6 rounded-full flex items-center justify-center" style={{ width: '100%' }}>
+                      <span className="text-xs font-semibold text-gray-500">Tiada Data</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-green-600 mt-1">↑ +10.5% dari Tingkatan 4</p>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Percubaan SPM (Sep 2026)</span>
-                  <span className="text-sm font-semibold text-gray-900">61.8%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-6">
-                  <div className="bg-green-500 h-6 rounded-full flex items-center justify-end pr-2" style={{ width: '61.8%' }}>
-                    <span className="text-xs font-semibold text-white">61.8%</span>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-400">Percubaan SPM (Sep 2026)</span>
+                    <span className="text-sm font-semibold text-gray-400">0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6">
+                    <div className="bg-gray-300 h-6 rounded-full flex items-center justify-center" style={{ width: '100%' }}>
+                      <span className="text-xs font-semibold text-gray-500">Tiada Data</span>
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-green-600 mt-1">↑ +19.8% dari Tingkatan 4</p>
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Target SPM 2026</span>
-                  <span className="text-sm font-semibold text-blue-900">67.0%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-6">
-                  <div className="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2" style={{ width: '67%' }}>
-                    <span className="text-xs font-semibold text-white">Target 67%</span>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-400">Target SPM 2026</span>
+                    <span className="text-sm font-semibold text-gray-400">67.0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-6">
+                    <div className="bg-blue-200 h-6 rounded-full flex items-center justify-end pr-2" style={{ width: '67%' }}>
+                      <span className="text-xs font-semibold text-blue-600">Target 67%</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-green-50 rounded-lg">
-              <p className="text-xs text-green-800">
-                <span className="font-semibold">Prestasi Baik!</span> Murid menunjukkan peningkatan konsisten. Teruskan program bimbingan.
+            
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">
+                <span className="font-semibold">Nota:</span> Import data murid dan gred untuk melihat trend perkembangan yang sebenar.
               </p>
             </div>
           </div>
@@ -261,73 +270,88 @@ export default function DashboardPage() {
           {/* Passing Rate by Subject */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Kadar Kelulusan Mengikut Subjek</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Bahasa Melayu</span>
-                  <span className="text-sm font-semibold text-gray-900">{stats.passing_rate.bahasa_melayu}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-blue-600 h-3 rounded-full" style={{ width: `${stats.passing_rate.bahasa_melayu}%` }}></div>
-                </div>
+            <div className="text-center py-6">
+              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
               </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Sejarah</span>
-                  <span className="text-sm font-semibold text-gray-900">{stats.passing_rate.sejarah}%</span>
+              <p className="text-gray-600 mb-4">Tiada data kelulusan untuk dipaparkan</p>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-gray-400">Bahasa Melayu</span>
+                    <span className="text-sm font-semibold text-gray-400">0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-gray-300 h-3 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-green-600 h-3 rounded-full" style={{ width: `${stats.passing_rate.sejarah}%` }}></div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-gray-400">Sejarah</span>
+                    <span className="text-sm font-semibold text-gray-400">0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-gray-300 h-3 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Matematik</span>
-                  <span className="text-sm font-semibold text-gray-900">{stats.passing_rate.matematik}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-purple-600 h-3 rounded-full" style={{ width: `${stats.passing_rate.matematik}%` }}></div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-gray-400">Matematik</span>
+                    <span className="text-sm font-semibold text-gray-400">0%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-gray-300 h-3 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
                 </div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-4">* Berdasarkan peperiksaan akhir tingkatan 4 tahun 2025</p>
           </div>
 
           {/* Teacher KPI Chart */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">KPI Pencerapan PdP Guru</h3>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Cemerlang (&ge;85)</span>
-                  <span className="text-sm font-semibold text-green-600">{Math.floor(mockTeacherKPIs.filter(k => k.pdp_score >= 85).length / 2)} guru</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-green-600 h-3 rounded-full" style={{ width: `${(mockTeacherKPIs.filter(k => k.pdp_score >= 85).length / 2 / mockTeachers.length * 100)}%` }}></div>
-                </div>
+            <div className="text-center py-6">
+              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Baik (70-84)</span>
-                  <span className="text-sm font-semibold text-yellow-600">{Math.floor(mockTeacherKPIs.filter(k => k.pdp_score >= 70 && k.pdp_score < 85).length / 2)} guru</span>
+              <p className="text-gray-600 mb-4">Tiada data KPI guru untuk dipaparkan</p>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-gray-400">Cemerlang (&ge;85)</span>
+                    <span className="text-sm font-semibold text-gray-400">0 guru</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-gray-300 h-3 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-yellow-500 h-3 rounded-full" style={{ width: `${(mockTeacherKPIs.filter(k => k.pdp_score >= 70 && k.pdp_score < 85).length / 2 / mockTeachers.length * 100)}%` }}></div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-gray-400">Baik (70-84)</span>
+                    <span className="text-sm font-semibold text-gray-400">0 guru</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-gray-300 h-3 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-gray-600">Perlu Diperbaiki (&lt;70)</span>
-                  <span className="text-sm font-semibold text-red-600">{Math.floor(mockTeacherKPIs.filter(k => k.pdp_score < 70).length / 2)} guru</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div className="bg-red-500 h-3 rounded-full" style={{ width: `${(mockTeacherKPIs.filter(k => k.pdp_score < 70).length / 2 / mockTeachers.length * 100)}%` }}></div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-gray-400">Perlu Diperbaiki (&lt;70)</span>
+                    <span className="text-sm font-semibold text-gray-400">0 guru</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div className="bg-gray-300 h-3 rounded-full" style={{ width: '0%' }}></div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <span className="font-semibold">Purata KPI:</span> {(mockTeacherKPIs.reduce((sum, k) => sum + k.pdp_score, 0) / mockTeacherKPIs.length).toFixed(1)}/100
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-600">
+                <span className="font-semibold">Purata KPI:</span> 0/100 (Tiada data guru)
               </p>
             </div>
           </div>

@@ -66,7 +66,7 @@ export default function MaintenancePage() {
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-700">
               <strong>Nota:</strong> Jika anda mempunyai sebarang pertanyaan mengenai penyelenggaraan ini, 
-              sila hubungi koordinator program atau pentadbir sistem.
+              sila hubungi pentadbir sistem.
             </p>
           </div>
         </div>

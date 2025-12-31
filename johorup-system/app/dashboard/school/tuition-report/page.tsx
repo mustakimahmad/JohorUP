@@ -44,7 +44,7 @@ export default function TuitionReportPage() {
     } else {
       setUser(user);
       
-      if (user.role !== 'school') {
+      if (user.role !== 'operational_school') {
         router.push('/dashboard');
       }
 
@@ -86,7 +86,7 @@ export default function TuitionReportPage() {
     router.push('/login');
   };
 
-  if (!user || user.role !== 'school') return null;
+  if (!user || user.role !== 'operational_school') return null;
 
   const school = mockSchools.find(s => s.id === user.school_id);
   

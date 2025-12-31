@@ -19,7 +19,7 @@ export default function SchoolDashboardPage() {
       setUser(user);
       
       // Redirect non-school users
-      if (user.role !== 'school') {
+      if (user.role !== 'operational_school') {
         router.push('/dashboard');
       }
     }
@@ -30,7 +30,7 @@ export default function SchoolDashboardPage() {
     router.push('/login');
   };
 
-  if (!user || user.role !== 'school') return null;
+  if (!user || user.role !== 'operational_school') return null;
 
   // Get school data
   const school = mockSchools.find(s => s.id === user.school_id);

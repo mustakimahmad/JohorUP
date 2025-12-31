@@ -15,52 +15,6 @@ export default function TuitionAnalysisPage() {
   const [selectedSubject, setSelectedSubject] = useState<number>(0);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
 
-  // Mock data for analysis
-  const [analysisData] = useState({
-    totalReports: 156,
-    totalSessions: 324,
-    totalStudentsParticipated: 2847,
-    averageAttendanceRate: 87.3,
-    reportsByMonth: [
-      { month: 'Jan 2026', reports: 28, sessions: 65, attendance: 89.2 },
-      { month: 'Feb 2026', reports: 32, sessions: 78, attendance: 85.7 },
-      { month: 'Mar 2026', reports: 29, sessions: 71, attendance: 88.1 },
-      { month: 'Apr 2026', reports: 35, sessions: 82, attendance: 86.9 },
-      { month: 'Mei 2026', reports: 32, sessions: 28, attendance: 89.5 },
-    ],
-    schoolPerformance: mockSchools.map(school => ({
-      ...school,
-      totalReports: Math.floor(Math.random() * 20) + 5,
-      totalSessions: Math.floor(Math.random() * 40) + 15,
-      averageAttendance: Math.floor(Math.random() * 20) + 75,
-      activeTeachers: mockTeachers.filter(t => t.school_id === school.id).length,
-      lastReportDate: '2026-05-15'
-    })),
-    teacherPerformance: mockTeachers.map(teacher => ({
-      ...teacher,
-      totalReports: Math.floor(Math.random() * 8) + 2,
-      totalSessions: Math.floor(Math.random() * 15) + 5,
-      averageAttendance: Math.floor(Math.random() * 25) + 70,
-      lastReportDate: '2026-05-12',
-      school: mockSchools.find(s => s.id === teacher.school_id),
-      subject: mockSubjects.find(s => s.id === teacher.subject_id)
-    })),
-    subjectAnalysis: mockSubjects.map(subject => ({
-      ...subject,
-      totalReports: Math.floor(Math.random() * 60) + 40,
-      totalSessions: Math.floor(Math.random() * 120) + 80,
-      averageAttendance: Math.floor(Math.random() * 20) + 75,
-      participatingSchools: Math.floor(Math.random() * 8) + 15,
-      activeTeachers: mockTeachers.filter(t => t.subject_id === subject.id).length
-    })),
-    attendanceReasons: [
-      { reason: 'Cuti sakit', count: 145, percentage: 32.1 },
-      { reason: 'Terlibat program sekolah', count: 98, percentage: 21.7 },
-      { reason: 'Mewakili sekolah ke pertandingan', count: 67, percentage: 14.8 },
-      { reason: 'Tidak hadir tanpa kenyataan', count: 142, percentage: 31.4 }
-    ]
-  });
-
   useEffect(() => {
     const user = getCurrentUser();
     if (!user) {
@@ -69,7 +23,7 @@ export default function TuitionAnalysisPage() {
       setUser(user);
       
       // Only allow PPD and Jabatan roles
-      if (user.role === 'school') {
+      if (user.role === 'operational_school') {
         router.push('/dashboard/school');
       }
     }
@@ -81,30 +35,6 @@ export default function TuitionAnalysisPage() {
   };
 
   if (!user) return null;
-
-  // Filter data based on selections
-  const filteredSchools = selectedPPD > 0 
-    ? analysisData.schoolPerformance.filter(s => s.ppd_id === selectedPPD)
-    : analysisData.schoolPerformance;
-
-  const filteredTeachers = analysisData.teacherPerformance.filter(t => {
-    if (selectedPPD > 0 && t.school?.ppd_id !== selectedPPD) return false;
-    if (selectedSchool > 0 && t.school_id !== selectedSchool) return false;
-    if (selectedSubject > 0 && t.subject_id !== selectedSubject) return false;
-    return true;
-  });
-
-  const getPerformanceColor = (rate: number) => {
-    if (rate >= 90) return 'text-green-600 bg-green-100';
-    if (rate >= 80) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
-
-  const getPerformanceLabel = (rate: number) => {
-    if (rate >= 90) return 'Cemerlang';
-    if (rate >= 80) return 'Baik';
-    return 'Perlu Perhatian';
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -118,78 +48,77 @@ export default function TuitionAnalysisPage() {
       <NavigationBar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Penapis Analisis</h3>
+        {/* Empty State */}
+        <div className="text-center py-12">
+          <div className="bg-white rounded-lg shadow p-8 mb-8">
+            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a4 4 0 01-4-4V5a4 4 0 014-4h10a4 4 0 014 4v14a4 4 0 01-4 4z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Tiada Data Analisis Tuisyen</h3>
+            <p className="text-gray-600 mb-6">
+              Belum ada laporan tuisyen untuk dianalisis. Sila pastikan sekolah telah menghantar laporan kelas tambahan.
+            </p>
+          </div>
+        </div>
+
+        {/* Filters - Disabled State */}
+        <div className="bg-white p-6 rounded-lg shadow mb-8 opacity-60">
+          <h3 className="text-lg font-semibold text-gray-500 mb-4">Penapis Analisis</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">PPD</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">PPD</label>
               <select
-                value={selectedPPD}
-                onChange={(e) => setSelectedPPD(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
               >
-                <option value={0}>Semua PPD</option>
-                {mockPPDs.map(ppd => (
-                  <option key={ppd.id} value={ppd.id}>{ppd.name}</option>
-                ))}
+                <option>Tiada data PPD</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sekolah</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Sekolah</label>
               <select
-                value={selectedSchool}
-                onChange={(e) => setSelectedSchool(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
               >
-                <option value={0}>Semua Sekolah</option>
-                {filteredSchools.map(school => (
-                  <option key={school.id} value={school.id}>{school.name}</option>
-                ))}
+                <option>Tiada data sekolah</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subjek</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Subjek</label>
               <select
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
               >
-                <option value={0}>Semua Subjek</option>
-                {mockSubjects.map(subject => (
-                  <option key={subject.id} value={subject.id}>{subject.name}</option>
-                ))}
+                <option>Tiada data subjek</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tempoh</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Tempoh</label>
               <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed"
               >
-                <option value="all">Semua Tempoh</option>
-                <option value="current_month">Bulan Ini</option>
-                <option value="last_3_months">3 Bulan Lepas</option>
-                <option value="current_year">Tahun Ini</option>
+                <option>Tiada data tempoh</option>
               </select>
             </div>
           </div>
         </div>
 
-        {/* Overall Statistics */}
+        {/* Overall Statistics - Empty State */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Jumlah Laporan</p>
-                <p className="text-3xl font-bold text-blue-600">{analysisData.totalReports}</p>
+                <p className="text-sm text-gray-400">Jumlah Laporan</p>
+                <p className="text-3xl font-bold text-gray-400">0</p>
               </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gray-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -199,11 +128,11 @@ export default function TuitionAnalysisPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Jumlah Sesi</p>
-                <p className="text-3xl font-bold text-green-600">{analysisData.totalSessions}</p>
+                <p className="text-sm text-gray-400">Jumlah Sesi</p>
+                <p className="text-3xl font-bold text-gray-400">0</p>
               </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gray-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -213,11 +142,11 @@ export default function TuitionAnalysisPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Murid Terlibat</p>
-                <p className="text-3xl font-bold text-purple-600">{analysisData.totalStudentsParticipated.toLocaleString()}</p>
+                <p className="text-sm text-gray-400">Murid Terlibat</p>
+                <p className="text-3xl font-bold text-gray-400">0</p>
               </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gray-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v2c0 .656.126 1.283.356 1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
@@ -227,11 +156,11 @@ export default function TuitionAnalysisPage() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Purata Kehadiran</p>
-                <p className="text-3xl font-bold text-orange-600">{analysisData.averageAttendanceRate}%</p>
+                <p className="text-sm text-gray-400">Purata Kehadiran</p>
+                <p className="text-3xl font-bold text-gray-400">0%</p>
               </div>
-              <div className="bg-orange-100 p-3 rounded-full">
-                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gray-100 p-3 rounded-full">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -239,152 +168,160 @@ export default function TuitionAnalysisPage() {
           </div>
         </div>
 
-        {/* Charts Row */}
+        {/* Charts Row - Empty State */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Monthly Trend */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Trend Bulanan</h3>
-            <div className="space-y-4">
-              {analysisData.reportsByMonth.map((month, index) => (
-                <div key={index}>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">{month.month}</span>
-                    <span className="text-sm text-gray-600">{month.reports} laporan | {month.attendance}% kehadiran</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-blue-600 h-3 rounded-full" 
-                      style={{ width: `${(month.reports / 40) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+            <div className="text-center py-8">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </div>
+              <p className="text-gray-500">Tiada data trend bulanan</p>
             </div>
           </div>
 
           {/* Subject Analysis */}
           <div className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Analisis Mengikut Subjek</h3>
-            <div className="space-y-4">
-              {analysisData.subjectAnalysis.map(subject => (
-                <div key={subject.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium text-gray-900">{subject.name}</p>
-                    <p className="text-sm text-gray-500">{subject.totalReports} laporan | {subject.activeTeachers} guru</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">{subject.averageAttendance}%</p>
-                    <p className="text-xs text-gray-500">{subject.participatingSchools} sekolah</p>
-                  </div>
-                </div>
-              ))}
+            <div className="text-center py-8">
+              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <p className="text-gray-500">Tiada data analisis subjek</p>
             </div>
           </div>
         </div>
 
-        {/* School Performance Table */}
+        {/* School Performance Table - Empty State */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="p-6 border-b">
             <h3 className="text-lg font-semibold text-gray-900">Prestasi Sekolah</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sekolah</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">PPD</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laporan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sesi</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guru Aktif</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kehadiran</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredSchools.map((school) => {
-                  const ppd = mockPPDs.find(p => p.id === school.ppd_id);
-                  return (
-                    <tr key={school.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{school.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">{ppd?.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{school.totalReports}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{school.totalSessions}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{school.activeTeachers}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{school.averageAttendance}%</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPerformanceColor(school.averageAttendance)}`}>
-                          {getPerformanceLabel(school.averageAttendance)}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">Tiada Data Prestasi Sekolah</h4>
+            <p className="text-gray-600 mb-6">Belum ada laporan tuisyen dari sekolah untuk dianalisis.</p>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sekolah</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">PPD</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laporan</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sesi</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Guru Aktif</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kehadiran</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      Tiada data prestasi sekolah untuk dipaparkan
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Teacher Performance Table */}
+        {/* Teacher Performance Table - Empty State */}
         <div className="bg-white rounded-lg shadow mb-8">
           <div className="p-6 border-b">
             <h3 className="text-lg font-semibold text-gray-900">Prestasi Guru</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Guru</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sekolah</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subjek</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laporan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sesi</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kehadiran</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredTeachers.slice(0, 20).map((teacher) => (
-                  <tr key={teacher.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{teacher.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{teacher.school?.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{teacher.subject?.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{teacher.totalReports}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{teacher.totalSessions}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{teacher.averageAttendance}%</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPerformanceColor(teacher.averageAttendance)}`}>
-                        {getPerformanceLabel(teacher.averageAttendance)}
-                      </span>
+          <div className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">Tiada Data Prestasi Guru</h4>
+            <p className="text-gray-600 mb-6">Belum ada laporan dari guru untuk dianalisis.</p>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Guru</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sekolah</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subjek</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laporan</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sesi</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kehadiran</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      Tiada data prestasi guru untuk dipaparkan
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Absence Reasons Analysis */}
+        {/* Absence Reasons Analysis - Empty State */}
         <div className="bg-white rounded-lg shadow">
           <div className="p-6 border-b">
             <h3 className="text-lg font-semibold text-gray-900">Analisis Alasan Ketidakhadiran</h3>
           </div>
-          <div className="p-6">
+          <div className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </div>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">Tiada Data Ketidakhadiran</h4>
+            <p className="text-gray-600 mb-6">Belum ada data kehadiran untuk dianalisis.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {analysisData.attendanceReasons.map((reason, index) => (
+              {['Cuti sakit', 'Program sekolah', 'Pertandingan', 'Lain-lain'].map((reason, index) => (
                 <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700 mb-2">{reason.reason}</p>
-                  <p className="text-2xl font-bold text-gray-900">{reason.count}</p>
-                  <p className="text-sm text-gray-500">{reason.percentage}%</p>
+                  <p className="text-sm font-medium text-gray-400 mb-2">{reason}</p>
+                  <p className="text-2xl font-bold text-gray-400">0</p>
+                  <p className="text-sm text-gray-400">0%</p>
                   <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${reason.percentage}%` }}
-                    ></div>
+                    <div className="bg-gray-300 h-2 rounded-full" style={{ width: '0%' }}></div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Instructions */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-4">Langkah Untuk Melihat Analisis</h3>
+          <ul className="space-y-2 text-sm text-blue-800">
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>Pastikan sekolah telah menghantar laporan kelas tambahan</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>Semak data kehadiran murid dalam laporan tuisyen</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>Import data guru dan subjek yang terlibat</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2">•</span>
+              <span>Hubungi pentadbir sistem untuk bantuan setup data</span>
+            </li>
+          </ul>
         </div>
       </main>
     </div>

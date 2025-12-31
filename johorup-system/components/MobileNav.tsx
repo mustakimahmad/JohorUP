@@ -35,21 +35,7 @@ export default function MobileNav({ currentPath }: MobileNavProps) {
       ];
     }
 
-    if (user.role === 'yayasan_jcorp') {
-      return [
-        ...baseItems,
-        { href: '/dashboard/students', label: 'Murid' },
-        { href: '/dashboard/teachers', label: 'Guru' },
-        { href: '/dashboard/programs', label: 'Program' },
-        { href: '/dashboard/calendar', label: 'Kalendar' },
-        { href: '/dashboard/tuition-analysis', label: 'Analisis Tuisyen' },
-        { href: '/dashboard/budget', label: 'Kewangan' },
-        { href: '/dashboard/reports', label: 'Laporan' },
-        { href: '/dashboard/yayasan-overview', label: 'Gambaran Keseluruhan' },
-      ];
-    }
-
-    // For other roles (ppd, sektor_pembelajaran, sektor_perancangan)
+    // For other roles (ppd, sektor_pembelajaran, etc)
     const otherRoleItems = [
       ...baseItems,
       { href: '/dashboard/students', label: 'Murid' },
@@ -61,8 +47,8 @@ export default function MobileNav({ currentPath }: MobileNavProps) {
       { href: '/dashboard/reports', label: 'Laporan' },
     ];
 
-    // Add maintenance control for coordinators
-    if (user.role === 'sektor_perancangan') {
+    // Add maintenance control for admin
+    if (user.role === 'admin') {
       otherRoleItems.push({ href: '/dashboard/maintenance-control', label: 'Kawalan Penyelenggaraan' });
     }
 

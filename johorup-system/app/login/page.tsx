@@ -2,7 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { loginUser, getCurrentUser } from '@/lib/localStorage-auth';
+// Database authentication instead of localStorage
+// import { loginUser, getCurrentUser } from '@/lib/localStorage-auth';
 import Logo from '@/components/Logo';
 
 function LoginForm() {
@@ -16,9 +17,9 @@ function LoginForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   useEffect(() => {
-    // Check if already logged in
-    const user = getCurrentUser();
-    if (user) {
+    // Check if already logged in via session storage
+    const userSession = sessionStorage.getItem('currentUser');
+    if (userSession) {
       router.push(callbackUrl);
     }
   }, [router, callbackUrl]);
@@ -29,14 +30,26 @@ function LoginForm() {
     setError('');
 
     try {
-      const user = loginUser(email, password);
-      if (user) {
+      // Use API authentication instead of localStorage
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.user) {
+        // Store user session
+        sessionStorage.setItem('currentUser', JSON.stringify(data.user));
         router.push(callbackUrl);
       } else {
-        setError('Email atau kata laluan tidak sah');
+        setError(data.message || 'Email atau kata laluan tidak sah');
       }
     } catch (error) {
-      console.error('Manual login error:', error);
+      console.error('Login error:', error);
       setError('Login gagal. Sila cuba lagi.');
     } finally {
       setIsLoading(false);
@@ -137,13 +150,46 @@ function LoginForm() {
           <div className="text-xs text-gray-500 space-y-1">
             <p>📧 <strong>Manual Login:</strong> Demo mode - Gunakan akaun demo</p>
             <div className="mt-2 space-y-1 border-t pt-2">
-              <p className="font-semibold text-blue-600">Demo Login Accounts:</p>
-              <p>📧 admin@jpnj.gov.my - Admin JPNJ</p>
-              <p>📧 koordinator@jpnj.gov.my - Koordinator</p>
-              <p>📧 ppd.jb@moe.gov.my - PPD Johor Bahru</p>
-              <p>📧 sekolah@moe-dl.edu.my - Sekolah Demo</p>
-              <p>📧 yayasan@jcorp.com.my - Yayasan JCorp</p>
-              <p className="font-semibold text-green-600 mt-2">🔑 Password: AdminPass123!</p>
+              <p className="font-semibold text-blue-600">Demo Login Accounts (181 pengguna dijangka):</p>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <p className="font-medium text-gray-800">Super Admin (S4PD):</p>
+                  <p>📧 admin@s4pd.gov.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Admin SPB:</p>
+                  <p>📧 spb.admin@jpnj.gov.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Admin SPM:</p>
+                  <p>📧 spm.admin@jpnj.gov.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Strategic Viewer (JCorp):</p>
+                  <p>📧 strategic@jcorp.com.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Strategic Viewer (Hasanah):</p>
+                  <p>📧 strategic@hasanah.com.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Tactical User (PPD):</p>
+                  <p>📧 ppd.jb@jpnj.gov.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Operational User (Sekolah):</p>
+                  <p>📧 school.demo@jpnj.gov.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Operational User (Guru):</p>
+                  <p>📧 teacher.math@jpnj.gov.my</p>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800">Coaching User (SISC+):</p>
+                  <p>📧 sisc.math@jpnj.gov.my</p>
+                </div>
+              </div>
+              <p className="font-semibold text-green-600 mt-2">🔑 Password untuk semua: admin123, spb123, spm123, etc.</p>
             </div>
           </div>
         </div>

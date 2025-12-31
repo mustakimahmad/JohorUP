@@ -51,7 +51,7 @@ export default function DashboardHeader({
                      user.email.includes('ppd') ? 'PPD' :
                      user.email.includes('pembelajaran') ? 'Sektor Pembelajaran' :
                      user.email.includes('perancangan') ? 'Sektor Perancangan' :
-                     'Koordinator'}
+                     'Admin'}
                   </p>
                 </div>
                 {onLogout && (

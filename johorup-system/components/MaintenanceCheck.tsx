@@ -16,8 +16,8 @@ export default function MaintenanceCheck({ userRole, children }: MaintenanceChec
     const isMaintenanceMode = localStorage.getItem('maintenanceMode') === 'true';
     
     if (isMaintenanceMode) {
-      // Allow coordinators and yayasan_jcorp to access system during maintenance
-      const allowedRoles = ['sektor_perancangan', 'yayasan_jcorp'];
+      // Allow admin to access system during maintenance
+      const allowedRoles = ['admin'];
       
       if (!userRole || !allowedRoles.includes(userRole)) {
         // Redirect to maintenance page for other users
@@ -39,8 +39,8 @@ export function useMaintenanceMode() {
   const canUpdate = (userRole?: string) => {
     if (!isMaintenanceMode) return true;
     
-    // Only coordinators can update during maintenance
-    return userRole === 'sektor_perancangan';
+    // Only admin can update during maintenance
+    return userRole === 'admin';
   };
 
   const isReadOnlyMode = (userRole?: string) => {

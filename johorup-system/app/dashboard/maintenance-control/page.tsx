@@ -22,8 +22,8 @@ export default function MaintenanceControlPage() {
     } else {
       setUser(user);
       
-      // Only allow coordinators (sektor_perancangan)
-      if (user.role !== 'sektor_perancangan') {
+      // Only allow admin (Super Admin or Admin roles)
+      if (!['super_admin_s4pd', 'admin_spb', 'admin_spm'].includes(user.role)) {
         router.push('/dashboard');
       }
     }
@@ -77,7 +77,7 @@ export default function MaintenanceControlPage() {
     setPendingAction(null);
   };
 
-  if (!user || user.role !== 'sektor_perancangan') return null;
+  if (!user || !['super_admin_s4pd', 'admin_spb', 'admin_spm'].includes(user.role)) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -202,7 +202,7 @@ export default function MaintenanceControlPage() {
             </li>
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">•</span>
-              Koordinator dan pentadbir masih boleh mengakses sistem seperti biasa
+              Admin masih boleh mengakses sistem seperti biasa
             </li>
           </ul>
         </div>
