@@ -1,36 +1,27 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "out"
 
 [build.environment]
   NODE_VERSION = "22"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# Next.js plugin for API routes
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# Force redirect root to login
+# Force redirect root to static login
 [[redirects]]
   from = "/"
-  to = "/login"
+  to = "/login-static.html"
   status = 302
   force = true
 
-# API routes
+# Redirect login to static version
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/___netlify-handler"
-  status = 200
+  from = "/login"
+  to = "/login-static.html"
+  status = 302
+  force = true
 
-# Catch-all for Next.js
+# SPA redirect for dashboard pages
 [[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/___netlify-handler"
+  from = "/dashboard/*"
+  to = "/index.html"
   status = 200
-
-# Headers for cache control
-[[headers]]
-  for = "/"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"

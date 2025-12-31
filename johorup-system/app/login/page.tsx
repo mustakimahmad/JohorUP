@@ -30,23 +30,27 @@ function LoginForm() {
     setError('');
 
     try {
-      // Use API authentication instead of localStorage
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // Use localStorage authentication with updated credentials
+      const users = [
+        { email: 'admin@s4pd.gov.my', password: 'admin123', name: 'Super Admin S4PD', role: 'super_admin_s4pd', level: 'Super Admin', sector: 'S4PD' },
+        { email: 'spb.admin@jpnj.gov.my', password: 'spb123', name: 'Admin SPB', role: 'admin_spb', level: 'Admin', sector: 'SPB' },
+        { email: 'spm.admin@jpnj.gov.my', password: 'spm123', name: 'Admin SPM', role: 'admin_spm', level: 'Admin', sector: 'SPM' },
+        { email: 'strategic@jcorp.com.my', password: 'jcorp123', name: 'Strategic JCorp', role: 'strategic_jcorp', level: 'Strategic Viewer', sector: 'JCORP' },
+        { email: 'strategic@hasanah.com.my', password: 'hasanah123', name: 'Strategic Hasanah', role: 'strategic_hasanah', level: 'Strategic Viewer', sector: 'HASANAH' },
+        { email: 'ppd.jb@jpnj.gov.my', password: 'ppd123', name: 'PPD Johor Bahru', role: 'tactical_ppd', level: 'Tactical User', sector: 'PPD' },
+        { email: 'school.demo@jpnj.gov.my', password: 'school123', name: 'Sekolah Demo', role: 'operational_school', level: 'Operational User', sector: 'SCHOOL' },
+        { email: 'teacher.math@jpnj.gov.my', password: 'teacher123', name: 'Guru Matematik', role: 'operational_teacher', level: 'Operational User', sector: 'TEACHER' },
+        { email: 'sisc.math@jpnj.gov.my', password: 'sisc123', name: 'SISC+ Matematik', role: 'coaching_sisc', level: 'Coaching User', sector: 'SISC' }
+      ];
 
-      const data = await response.json();
-
-      if (data.success && data.user) {
+      const user = users.find(u => u.email === email && u.password === password);
+      
+      if (user) {
         // Store user session
-        sessionStorage.setItem('currentUser', JSON.stringify(data.user));
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
         router.push(callbackUrl);
       } else {
-        setError(data.message || 'Email atau kata laluan tidak sah');
+        setError('Email atau kata laluan tidak sah');
       }
     } catch (error) {
       console.error('Login error:', error);
