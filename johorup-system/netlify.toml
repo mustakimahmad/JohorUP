@@ -24,6 +24,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/debug-env"
+  to = "/.netlify/functions/debug-env"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api-:splat"
   status = 200

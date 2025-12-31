@@ -45,6 +45,7 @@
         <p>Test Neon PostgreSQL connection for JohorUP system</p>
         
         <div>
+            <button onclick="debugEnvironment()">Debug Environment</button>
             <button onclick="testDatabase()">Test Database Connection</button>
             <button onclick="testDirectFunction()">Test Direct Function</button>
             <button onclick="testSimpleFunction()">Test Simple Function</button>
@@ -57,6 +58,44 @@
     </div>
 
     <script>
+        async function debugEnvironment() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="status loading">🔍 Debugging environment variables...</div>';
+            
+            try {
+                const response = await fetch('/api/debug-env', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            🔍 Environment debug info retrieved
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Debug failed
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ Debug request failed: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
         async function testDatabase() {
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '<div class="status loading">🔄 Testing database connection...</div>';
@@ -253,7 +292,7 @@
         
         // Auto-test on page load
         window.onload = function() {
-            setTimeout(testSimpleFunction, 1000);
+            setTimeout(debugEnvironment, 1000);
         };
     </script>
 </body>
