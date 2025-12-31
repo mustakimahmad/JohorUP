@@ -48,9 +48,13 @@ exports.handler = async (event, context) => {
     const client = await pool.connect();
 
     try {
+      // Drop existing tables if they exist (to avoid foreign key conflicts)
+      await client.query(`DROP TABLE IF EXISTS audit_logs CASCADE`);
+      await client.query(`DROP TABLE IF EXISTS users CASCADE`);
+
       // Create users table first
       await client.query(`
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE users (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           name VARCHAR(255) NOT NULL,
           email VARCHAR(255) UNIQUE NOT NULL,
@@ -145,12 +149,7 @@ exports.handler = async (event, context) => {
         try {
           await client.query(
             `INSERT INTO users (name, email, password, role, level, sector) 
-             VALUES ($1, $2, $3, $4, $5, $6) 
-             ON CONFLICT (email) DO UPDATE SET
-             name = EXCLUDED.name,
-             role = EXCLUDED.role,
-             level = EXCLUDED.level,
-             sector = EXCLUDED.sector`,
+             VALUES ($1, $2, $3, $4, $5, $6)`,
             [user.name, user.email, user.password, user.role, user.level, user.sector]
           );
           insertedUsers++;
@@ -161,7 +160,7 @@ exports.handler = async (event, context) => {
 
       // Create audit logs table AFTER users are inserted
       await client.query(`
-        CREATE TABLE IF NOT EXISTS audit_logs (
+        CREATE TABLE audit_logs (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           user_id UUID,
           action VARCHAR(100) NOT NULL,
@@ -170,7 +169,7 @@ exports.handler = async (event, context) => {
           ip_address INET,
           user_agent TEXT,
           timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+          CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
         )
       `);
 
