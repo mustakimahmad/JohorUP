@@ -1,3 +1,53 @@
+// Helper function to get client IP address
+function getClientIP(event) {
+  // Get IP from headers
+  const forwarded = event.headers['x-forwarded-for'];
+  const realIP = event.headers['x-real-ip'];
+  const clientIP = event.headers['client-ip'];
+  
+  // Handle multiple IPs in x-forwarded-for (take first one)
+  if (forwarded) {
+    const ips = forwarded.split(',').map(ip => ip.trim());
+    // Return first valid IP (usually client IP)
+    for (const ip of ips) {
+      if (isValidIP(ip)) {
+        return ip;
+      }
+    }
+  }
+  
+  // Try other headers
+  if (realIP && isValidIP(realIP)) return realIP;
+  if (clientIP && isValidIP(clientIP)) return clientIP;
+  
+  // Fallback
+  return '127.0.0.1';
+}
+
+// Helper function to validate IP address format
+function isValidIP(ip) {
+  // Basic IPv4 validation
+  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+  // Basic IPv6 validation (simplified)
+  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+  
+  if (ipv4Regex.test(ip)) {
+    // Check if each octet is valid (0-255)
+    const octets = ip.split('.');
+    return octets.every(octet => {
+      const num = parseInt(octet, 10);
+      return num >= 0 && num <= 255;
+    });
+  }
+  
+  // For IPv6, accept if it matches basic pattern
+  if (ipv6Regex.test(ip)) {
+    return true;
+  }
+  
+  return false;
+}
+
 // User authentication API
 exports.handler = async (event, context) => {
   const headers = {
@@ -64,15 +114,15 @@ exports.handler = async (event, context) => {
       );
 
       if (result.rows.length === 0) {
-        // Log failed login attempt
-        await client.query(
-          `INSERT INTO audit_logs (user_id, action, resource, details, ip_address) 
-           VALUES (NULL, 'LOGIN_FAILED', 'AUTH', $1, $2)`,
-          [
-            JSON.stringify({ email, reason: 'Invalid credentials' }),
-            event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown'
-          ]
-        );
+      // Log failed login attempt
+      await client.query(
+        `INSERT INTO audit_logs (user_id, action, resource, details, ip_address) 
+         VALUES (NULL, 'LOGIN_FAILED', 'AUTH', $1, $2)`,
+        [
+          JSON.stringify({ email, reason: 'Invalid credentials' }),
+          getClientIP(event)
+        ]
+      );
 
         return {
           statusCode: 401,
@@ -93,7 +143,7 @@ exports.handler = async (event, context) => {
         [
           user.id,
           JSON.stringify({ email: user.email, role: user.role }),
-          event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown',
+          getClientIP(event),
           event.headers['user-agent'] || 'unknown'
         ]
       );
