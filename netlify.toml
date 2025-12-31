@@ -1,12 +1,12 @@
 # Netlify configuration for JohorUP System
 [build]
-  command = "cd johorup-system && npm run build"
-  functions = "johorup-system/netlify/functions"
-  publish = "johorup-system/out"
+  base = "johorup-system"
+  command = "npm install --legacy-peer-deps && npm run build"
+  functions = "netlify/functions"
+  publish = "out"
 
 [build.environment]
   NODE_VERSION = "22"
-  NPM_FLAGS = "--legacy-peer-deps"
 
 # API routes to Netlify functions (HIGHEST PRIORITY)
 [[redirects]]
