@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Get User Data API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        select, input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Get User Data API</h1>
+        
+        <div>
+            <h3>Test Parameters</h3>
+            <label>User Email:</label>
+            <input type="email" id="userEmail" value="admin@s4pd.gov.my" placeholder="Enter user email">
+            
+            <label>User Role:</label>
+            <select id="userRole">
+                <option value="super_admin_s4pd">Super Admin S4PD</option>
+                <option value="admin_spb">Admin SPB</option>
+                <option value="admin_spm">Admin SPM</option>
+                <option value="tactical_ppd">Tactical PPD</option>
+                <option value="coaching_sisc">SISC+</option>
+                <option value="operational_school">School Admin</option>
+                <option value="operational_teacher">Teacher</option>
+            </select>
+            
+            <label>Data Type:</label>
+            <select id="dataType">
+                <option value="students">Students</option>
+                <option value="teachers">Teachers</option>
+                <option value="schools">Schools</option>
+                <option value="ppd">PPD</option>
+                <option value="dashboard_stats">Dashboard Stats</option>
+            </select>
+            
+            <br><br>
+            <button onclick="testGetUserData()">Test Get User Data</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testGetUserData() {
+            const userEmail = document.getElementById('userEmail').value;
+            const userRole = document.getElementById('userRole').value;
+            const dataType = document.getElementById('dataType').value;
+            
+            if (!userEmail || !userRole || !dataType) {
+                showResult('Please fill in all fields', 'error');
+                return;
+            }
+
+            showResult('Testing get user data API...', 'info');
+
+            try {
+                const response = await fetch('/api/get-user-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userEmail: userEmail,
+                        userRole: userRole,
+                        dataType: dataType
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    showResult(`JSON Parse Error: ${parseError.message}\n\nRaw Response:\n${responseText}`, 'error');
+                    return;
+                }
+
+                if (data.status === 'success') {
+                    showResult(`✅ Success!\n\nUser Info:\n${JSON.stringify(data.user_info, null, 2)}\n\nData Count: ${Array.isArray(data.data) ? data.data.length : 'N/A'}\n\nSample Data:\n${JSON.stringify(data.data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ API Error: ${data.error}\n\nFull Response:\n${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<pre>${message}</pre>`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Test with different users
+        function setTestUser(email, role) {
+            document.getElementById('userEmail').value = email;
+            document.getElementById('userRole').value = role;
+        }
+    </script>
+</body>
+</html>
