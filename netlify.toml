@@ -36,7 +36,7 @@
 
 [[redirects]]
   from = "/api/setup-hierarchy"
-  to = "/.netlify/functions/setup-hierarchical-schema"
+  to = "/.netlify/functions/setup-hierarchical-schema-v2"
   status = 200
 
 [[redirects]]

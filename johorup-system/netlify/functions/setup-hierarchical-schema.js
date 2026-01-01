@@ -34,9 +34,24 @@ exports.handler = async (event, context) => {
     const client = await pool.connect();
 
     try {
+      // Drop existing hierarchical tables if they exist (to avoid column conflicts)
+      await client.query(`DROP TABLE IF EXISTS students CASCADE`);
+      await client.query(`DROP TABLE IF EXISTS schools CASCADE`);
+      await client.query(`DROP TABLE IF EXISTS ppd CASCADE`);
+
+      // Remove hierarchical columns from users table
+      try {
+        await client.query(`ALTER TABLE users DROP COLUMN IF EXISTS ppd_id`);
+        await client.query(`ALTER TABLE users DROP COLUMN IF EXISTS school_id`);
+        await client.query(`ALTER TABLE users DROP COLUMN IF EXISTS subject`);
+        await client.query(`ALTER TABLE users DROP COLUMN IF EXISTS specialization`);
+      } catch (dropError) {
+        console.log('Column drop error (expected):', dropError.message);
+      }
+
       // Create PPD (Pejabat Pendidikan Daerah) table
       await client.query(`
-        CREATE TABLE IF NOT EXISTS ppd (
+        CREATE TABLE ppd (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           code VARCHAR(20) UNIQUE NOT NULL,
           name VARCHAR(255) NOT NULL,
@@ -48,11 +63,11 @@ exports.handler = async (event, context) => {
 
       // Create Schools table
       await client.query(`
-        CREATE TABLE IF NOT EXISTS schools (
+        CREATE TABLE schools (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           code VARCHAR(20) UNIQUE NOT NULL,
           name VARCHAR(255) NOT NULL,
-          ppd_id UUID,
+          ppd_id UUID REFERENCES ppd(id) ON DELETE SET NULL,
           address TEXT,
           phone VARCHAR(20),
           email VARCHAR(100),
@@ -63,24 +78,13 @@ exports.handler = async (event, context) => {
         )
       `);
 
-      // Add foreign key constraint for schools after ppd table exists
-      try {
-        await client.query(`
-          ALTER TABLE schools 
-          ADD CONSTRAINT fk_schools_ppd 
-          FOREIGN KEY (ppd_id) REFERENCES ppd(id) ON DELETE SET NULL
-        `);
-      } catch (fkError) {
-        console.log('Schools PPD foreign key constraint already exists:', fkError.message);
-      }
-
       // Create Students table
       await client.query(`
-        CREATE TABLE IF NOT EXISTS students (
+        CREATE TABLE students (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           ic_number VARCHAR(20) UNIQUE NOT NULL,
           name VARCHAR(255) NOT NULL,
-          school_id UUID,
+          school_id UUID REFERENCES schools(id) ON DELETE SET NULL,
           class_level VARCHAR(10),
           class_name VARCHAR(50),
           gender VARCHAR(10),
@@ -93,24 +97,13 @@ exports.handler = async (event, context) => {
         )
       `);
 
-      // Add foreign key constraint for students after schools table exists
-      try {
-        await client.query(`
-          ALTER TABLE students 
-          ADD CONSTRAINT fk_students_school 
-          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
-        `);
-      } catch (fkError) {
-        console.log('Students school foreign key constraint already exists:', fkError.message);
-      }
-
-      // Add hierarchical fields to users table (without foreign key constraints first)
+      // Add hierarchical fields to users table
       await client.query(`
         ALTER TABLE users 
-        ADD COLUMN IF NOT EXISTS ppd_id UUID,
-        ADD COLUMN IF NOT EXISTS school_id UUID,
-        ADD COLUMN IF NOT EXISTS subject VARCHAR(100),
-        ADD COLUMN IF NOT EXISTS specialization VARCHAR(100)
+        ADD COLUMN ppd_id UUID REFERENCES ppd(id) ON DELETE SET NULL,
+        ADD COLUMN school_id UUID REFERENCES schools(id) ON DELETE SET NULL,
+        ADD COLUMN subject VARCHAR(100),
+        ADD COLUMN specialization VARCHAR(100)
       `);
 
       // Insert sample PPD data
