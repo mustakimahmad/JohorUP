@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Diagnostic Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .result { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JohorUP API Diagnostic Tool</h1>
+        
+        <div class="grid">
+            <div>
+                <h3>Test Simple APIs</h3>
+                <button onclick="testAPI('/api/test-simple')">Test Simple</button>
+                <button onclick="testAPI('/api/test-db')">Test DB</button>
+                <button onclick="testAPI('/api/debug-env')">Debug Env</button>
+                <button onclick="testAPI('/api/test-get-user-data')">Test Get User Data</button>
+            </div>
+            
+            <div>
+                <h3>Test Complex APIs</h3>
+                <button onclick="testGetUserDataAPI()">Get User Data (Students)</button>
+                <button onclick="testAuthAPI()">Test Auth Login</button>
+                <button onclick="testAdminAPI()">Test Admin Users</button>
+            </div>
+        </div>
+
+        <div>
+            <h3>Session Information</h3>
+            <button onclick="checkSession()">Check Current Session</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testAPI(endpoint) {
+            showResult(`Testing ${endpoint}...`, 'info');
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'GET'
+                });
+                
+                const responseText = await response.text();
+                
+                showResult(`✅ ${endpoint} Response (${response.status}):\n${responseText}`, 
+                    response.ok ? 'success' : 'error');
+                    
+            } catch (error) {
+                showResult(`❌ ${endpoint} Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetUserDataAPI() {
+            showResult('Testing Get User Data API with sample data...', 'info');
+            
+            try {
+                const response = await fetch('/api/get-user-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userEmail: 'admin@s4pd.gov.my',
+                        userRole: 'super_admin_s4pd',
+                        dataType: 'students'
+                    })
+                });
+                
+                const responseText = await response.text();
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    showResult(`✅ Get User Data Response (${response.status}):\n${JSON.stringify(data, null, 2)}`, 
+                        response.ok ? 'success' : 'error');
+                } catch (parseError) {
+                    showResult(`❌ JSON Parse Error for Get User Data:\nParse Error: ${parseError.message}\nRaw Response: ${responseText}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Get User Data Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAuthAPI() {
+            showResult('Testing Auth API...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@s4pd.gov.my',
+                        password: 'admin123'
+                    })
+                });
+                
+                const responseText = await response.text();
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    showResult(`✅ Auth Response (${response.status}):\n${JSON.stringify(data, null, 2)}`, 
+                        response.ok ? 'success' : 'error');
+                } catch (parseError) {
+                    showResult(`❌ JSON Parse Error for Auth:\nParse Error: ${parseError.message}\nRaw Response: ${responseText}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Auth Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAdminAPI() {
+            showResult('Testing Admin Users API...', 'info');
+            
+            try {
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'list_all_users',
+                        adminEmail: 'admin@s4pd.gov.my',
+                        adminRole: 'super_admin_s4pd'
+                    })
+                });
+                
+                const responseText = await response.text();
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    showResult(`✅ Admin Users Response (${response.status}):\n${JSON.stringify(data, null, 2)}`, 
+                        response.ok ? 'success' : 'error');
+                } catch (parseError) {
+                    showResult(`❌ JSON Parse Error for Admin Users:\nParse Error: ${parseError.message}\nRaw Response: ${responseText}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Admin Users Network Error: ${error.message}`, 'error');
+            }
+        }
+
+        function checkSession() {
+            const session = sessionStorage.getItem('currentUser');
+            if (session) {
+                try {
+                    const user = JSON.parse(session);
+                    showResult(`✅ Current Session:\n${JSON.stringify(user, null, 2)}`, 'success');
+                } catch (error) {
+                    showResult(`❌ Session Parse Error: ${error.message}\nRaw Session: ${session}`, 'error');
+                }
+            } else {
+                showResult('❌ No session found in sessionStorage', 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<pre>${message}</pre>`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            showResult('API Diagnostic Tool Loaded', 'info');
+            checkSession();
+        };
+    </script>
+</body>
+</html>
