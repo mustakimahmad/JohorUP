@@ -2,39 +2,52 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, logoutUser } from '@/lib/localStorage-auth';
-import { mockStudents, mockProgramReports, mockStudentAttendance, mockProgramPhotos, mockPrograms, mockSchools } from '@/lib/mockData';
+import { useDashboardStats, useStudentsData, getScopeDescription } from '@/lib/useHierarchicalData';
+import { mockProgramReports, mockStudentAttendance, mockProgramPhotos, mockPrograms, mockSchools } from '@/lib/mockData';
 import DashboardHeader from '@/components/DashboardHeader';
 import NavigationBar from '@/components/NavigationBar';
 
 export default function SchoolDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { data: statsData, user, loading } = useDashboardStats();
+  const { data: studentsData } = useStudentsData();
+
+  const stats = statsData?.dashboard_stats || {};
+  const schoolStudents = studentsData?.students || [];
 
   useEffect(() => {
-    const user = getCurrentUser();
-    if (!user) {
+    // Get current user from session
+    const userSession = sessionStorage.getItem('currentUser');
+    if (!userSession) {
       router.push('/login');
-    } else {
-      setUser(user);
-      
-      // Redirect non-school users
-      if (user.role !== 'operational_school') {
-        router.push('/dashboard');
-      }
+      return;
+    }
+
+    const currentUser = JSON.parse(userSession);
+    
+    // Redirect non-school users
+    if (currentUser.role !== 'operational_school') {
+      router.push('/dashboard');
     }
   }, [router]);
 
   const handleLogout = () => {
-    logoutUser();
+    sessionStorage.removeItem('currentUser');
     router.push('/login');
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!user || user.role !== 'operational_school') return null;
 
   // Get school data
-  const school = mockSchools.find(s => s.id === user.school_id);
-  const schoolStudents = mockStudents.filter(s => s.school_id === user.school_id);
+  const school = user.school_name ? { name: user.school_name } : null;
   const schoolReports = mockProgramReports.filter(r => r.school_id === user.school_id);
   
   // Calculate statistics
@@ -58,8 +71,8 @@ export default function SchoolDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
-        title={`Dashboard ${school?.name || 'Sekolah'}`}
-        subtitle="Pengurusan Murid Terlibat dan Laporan Program"
+        title={`Dashboard ${school?.name || user.school_name || 'Sekolah'}`}
+        subtitle={`Pengurusan Murid Terlibat dan Laporan Program - ${getScopeDescription(user.role, user)}`}
         user={user}
         onLogout={handleLogout}
       />

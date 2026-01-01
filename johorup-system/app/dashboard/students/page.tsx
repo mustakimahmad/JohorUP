@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useStudentsData, getUserPermissions, getRoleDisplayName, getScopeDescription } from '@/lib/useHierarchicalData';
 import { 
   isStudentTransferAllowed, 
   getTransferPeriodStatus, 
@@ -14,8 +15,11 @@ interface Student {
   id: number;
   name: string;
   ic_number: string;
-  class: string;
+  class_level?: string;
+  class_name?: string;
   school_name: string;
+  ppd_name?: string;
+  district?: string;
 }
 
 interface ExamGrade {
@@ -27,58 +31,47 @@ interface ExamGrade {
 }
 
 export default function StudentsPage() {
-  const [user, setUser] = useState<any>(null);
-  const [students, setStudents] = useState<Student[]>([]);
+  const { data, user, loading, error } = useStudentsData();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showGradeForm, setShowGradeForm] = useState(false);
   const [selectedExamType, setSelectedExamType] = useState('');
   const [examGrades, setExamGrades] = useState<ExamGrade[]>([]);
+
+  const students = data?.students || [];
+  const permissions = user ? getUserPermissions(user.role) : null;
 
   // Transfer period status
   const transferStatus = getTransferPeriodStatus();
   const canMakeTransfers = user ? canUserMakeTransfers(user.role) : false;
   const isTransferAllowed = isStudentTransferAllowed() && canMakeTransfers;
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-      // Load sample students for the teacher's subject
-      loadStudents();
-    }
-  }, []);
-
-  const loadStudents = () => {
-    // Sample students - in production this would come from API
-    const sampleStudents: Student[] = [];
-    setStudents(sampleStudents);
-  };
-
   const getPageTitle = () => {
+    if (!user) return 'Murid';
     if (user.role === 'operational_teacher') return 'Murid Saya';
-    if (user.role === 'operational_school') return 'Murid';
-    return 'Murid';
+    if (user.role === 'operational_school') return 'Murid Sekolah';
+    if (user.role === 'coaching_sisc') return 'Murid Daerah';
+    if (user.role === 'tactical_ppd') return 'Murid PPD';
+    return 'Senarai Murid';
   };
 
   const getPageDescription = () => {
-    if (user.role === 'operational_teacher') return `Pengurusan data peperiksaan murid - ${getTeacherSubject()}`;
-    if (user.role === 'operational_school') return 'Pengurusan data peperiksaan murid sekolah';
-    return 'Pengurusan data peperiksaan murid';
+    if (!user) return 'Pengurusan data murid';
+    const scope = getScopeDescription(user.role, user);
+    if (user.role === 'operational_teacher') return `Pengurusan data peperiksaan murid - ${getTeacherSubject()} (${scope})`;
+    if (user.role === 'operational_school') return `Pengurusan data peperiksaan murid sekolah (${scope})`;
+    if (user.role === 'coaching_sisc') return `Pencerapan murid subjek ${user.subject || 'khusus'} (${scope})`;
+    if (user.role === 'tactical_ppd') return `Pemantauan murid daerah (${scope})`;
+    return `Pengurusan data murid (${scope})`;
   };
 
   const getUserRole = () => {
-    if (user.role === 'operational_teacher') return `Guru ${getTeacherSubject()}`;
-    if (user.role === 'operational_school') return 'Pentadbir Sekolah';
-    return 'Pengguna';
+    if (!user) return 'Pengguna';
+    return getRoleDisplayName(user.role);
   };
 
   const getTeacherSubject = () => {
     if (!user) return 'Subjek';
-    // Determine subject from user email or role
-    if (user.email?.includes('bahasamelayu') || user.name?.toLowerCase().includes('bahasa')) return 'Bahasa Melayu';
-    if (user.email?.includes('sejarah') || user.name?.toLowerCase().includes('sejarah')) return 'Sejarah';
-    if (user.email?.includes('matematik') || user.name?.toLowerCase().includes('matematik')) return 'Matematik';
-    return 'Bahasa Melayu'; // Default
+    return user.subject || 'Bahasa Melayu'; // Default
   };
 
   const examTypes = [
@@ -113,11 +106,29 @@ export default function StudentsPage() {
     return examGrades.find(g => g.student_id === studentId && g.exam_type === examType);
   };
 
-  if (!user || (user.role !== 'operational_teacher' && user.role !== 'operational_school')) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-500">
+          Error loading data: {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !permissions?.canEditStudents) {
     return (
       <div className="p-6">
         <div className="text-center text-gray-500">
-          Access denied. This page is only available for teachers and school administrators.
+          Access denied. This page is only available for authorized users.
         </div>
       </div>
     );
@@ -143,7 +154,11 @@ export default function StudentsPage() {
             <div>
               <h3 className="font-semibold text-gray-900">{user.name}</h3>
               <p className="text-sm text-gray-600">{getUserRole()}</p>
-              <p className="text-xs text-gray-500">{user.email}</p>
+              <p className="text-xs text-gray-500">Skop: {getScopeDescription(user.role, user)}</p>
+            </div>
+            <div className="ml-auto text-right">
+              <div className="text-sm font-medium text-gray-900">Jumlah Murid</div>
+              <div className="text-2xl font-bold text-blue-600">{students.length}</div>
             </div>
           </div>
         </CardContent>
@@ -236,7 +251,10 @@ export default function StudentsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-800">
-              {user.role === 'operational_teacher' ? `Senarai Murid - ${getTeacherSubject()}` : 'Senarai Murid Sekolah'}
+              {user.role === 'operational_teacher' ? `Senarai Murid - ${getTeacherSubject()}` : 
+               user.role === 'operational_school' ? 'Senarai Murid Sekolah' :
+               user.role === 'coaching_sisc' ? `Senarai Murid - ${user.subject || 'Subjek Khusus'}` :
+               'Senarai Murid'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -247,6 +265,10 @@ export default function StudentsPage() {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Nama Murid</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">No. IC</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Kelas</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Sekolah</th>
+                    {(user.role === 'tactical_ppd' || user.role === 'coaching_sisc' || permissions?.canViewAll) && (
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">PPD</th>
+                    )}
                     {user.role === 'operational_school' && (
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Subjek</th>
                     )}
@@ -261,10 +283,21 @@ export default function StudentsPage() {
                     <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className="font-medium text-gray-900">{student.name}</div>
-                        <div className="text-xs text-gray-500">{student.school_name}</div>
+                        {student.district && (
+                          <div className="text-xs text-gray-500">{student.district}</div>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-gray-700">{student.ic_number}</td>
-                      <td className="py-3 px-4 text-gray-700">{student.class}</td>
+                      <td className="py-3 px-4 text-gray-700">
+                        {student.class_level && student.class_name 
+                          ? `${student.class_level} ${student.class_name}`
+                          : 'N/A'
+                        }
+                      </td>
+                      <td className="py-3 px-4 text-gray-700">{student.school_name}</td>
+                      {(user.role === 'tactical_ppd' || user.role === 'coaching_sisc' || permissions?.canViewAll) && (
+                        <td className="py-3 px-4 text-gray-700">{student.ppd_name || 'N/A'}</td>
+                      )}
                       {user.role === 'operational_school' && (
                         <td className="py-3 px-4 text-gray-700">Semua Subjek</td>
                       )}
@@ -327,9 +360,20 @@ export default function StudentsPage() {
             <p className="text-gray-600 mb-4">
               {user.role === 'operational_teacher' 
                 ? `Belum ada murid yang ditugaskan untuk subjek ${getTeacherSubject()}. Sila hubungi pentadbir sekolah untuk mendapatkan senarai murid.`
-                : 'Belum ada murid yang didaftarkan di sekolah ini. Sila hubungi pentadbir sistem untuk mendapatkan senarai murid.'
+                : user.role === 'operational_school'
+                ? 'Belum ada murid yang didaftarkan di sekolah ini. Sila hubungi pentadbir sistem untuk mendapatkan senarai murid.'
+                : user.role === 'coaching_sisc'
+                ? `Belum ada murid dalam PPD ${user.ppd_name || 'ini'} untuk subjek ${user.subject || 'khusus'}. Data murid akan dipaparkan setelah sekolah mendaftar murid.`
+                : user.role === 'tactical_ppd'
+                ? `Belum ada murid dalam PPD ${user.ppd_name || 'ini'}. Data murid akan dipaparkan setelah sekolah mendaftar murid.`
+                : 'Belum ada data murid tersedia untuk skop akses anda.'
               }
             </p>
+            {permissions?.canViewAll && (
+              <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                <strong>Nota untuk Admin:</strong> Sila pastikan data murid telah diimport ke dalam sistem melalui fungsi import data atau hubungi pentadbir teknikal.
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

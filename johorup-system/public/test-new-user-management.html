@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test New User Management Integration</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Test New User Management Integration</h1>
+            <p>Testing the integrated hierarchical user management system</p>
+        </div>
+        
+        <div class="content">
+            <!-- Test 1: Load Hierarchy Options -->
+            <div class="test-section">
+                <h3>📋 Test 1: Load Hierarchy Options</h3>
+                <p>Test loading PPD, Schools, and Role options for dropdowns</p>
+                <button onclick="testHierarchyOptions()">Load Hierarchy Options</button>
+                <div id="hierarchyResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 2: List All Users -->
+            <div class="test-section">
+                <h3>👥 Test 2: List All Users</h3>
+                <p>Test loading all users with hierarchy information</p>
+                <button onclick="testListUsers()">List All Users</button>
+                <div id="usersResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 3: Create New User -->
+            <div class="test-section">
+                <h3>➕ Test 3: Create New User</h3>
+                <p>Test creating a new user with hierarchy assignment</p>
+                <button onclick="testCreateUser()">Create Test User</button>
+                <div id="createResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 4: Update User -->
+            <div class="test-section">
+                <h3>✏️ Test 4: Update User</h3>
+                <p>Test updating an existing user's information</p>
+                <button onclick="testUpdateUser()">Update Test User</button>
+                <div id="updateResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 5: Assign Hierarchy -->
+            <div class="test-section">
+                <h3>🏢 Test 5: Assign Hierarchy</h3>
+                <p>Test assigning PPD/School hierarchy to a user</p>
+                <button onclick="testAssignHierarchy()">Assign Hierarchy</button>
+                <div id="hierarchyAssignResult" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 6: Dashboard Integration -->
+            <div class="test-section">
+                <h3>🎯 Test 6: Dashboard Integration</h3>
+                <p>Test accessing the main dashboard user management page</p>
+                <button onclick="testDashboardAccess()">Open Dashboard User Management</button>
+                <div id="dashboardResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const adminCredentials = {
+            email: 'admin@s4pd.gov.my',
+            role: 'super_admin_s4pd'
+        };
+
+        async function testHierarchyOptions() {
+            const resultDiv = document.getElementById('hierarchyResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Loading hierarchy options...';
+
+            try {
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_hierarchy_options',
+                        adminEmail: adminCredentials.email,
+                        adminRole: adminCredentials.role
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ SUCCESS: Loaded hierarchy options
+PPD Count: ${data.ppd.length}
+Schools Count: ${data.schools.length}
+Roles Count: ${data.roles.length}
+Subjects Count: ${data.subjects.length}
+
+Sample PPD: ${data.ppd[0]?.name || 'None'}
+Sample School: ${data.schools[0]?.name || 'None'}
+Sample Role: ${data.roles[0]?.label || 'None'}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ERROR: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+            }
+        }
+
+        async function testListUsers() {
+            const resultDiv = document.getElementById('usersResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Loading all users...';
+
+            try {
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'list_all_users',
+                        adminEmail: adminCredentials.email,
+                        adminRole: adminCredentials.role
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    const sampleUser = data.users[0];
+                    resultDiv.textContent = `✅ SUCCESS: Loaded ${data.total} users
+
+Sample User:
+- Name: ${sampleUser?.name || 'N/A'}
+- Email: ${sampleUser?.email || 'N/A'}
+- Role: ${sampleUser?.role || 'N/A'}
+- PPD: ${sampleUser?.ppd_name || 'Not assigned'}
+- School: ${sampleUser?.school_name || 'Not assigned'}
+- Status: ${sampleUser?.status || 'N/A'}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ERROR: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+            }
+        }
+
+        async function testCreateUser() {
+            const resultDiv = document.getElementById('createResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Creating test user...';
+
+            const testUser = {
+                name: 'Test User ' + Date.now(),
+                email: 'testuser' + Date.now() + '@test.com',
+                password: 'temppass123',
+                role: 'operational_teacher',
+                level: 'Operational User',
+                sector: 'TEACHER',
+                subject: 'Mathematics'
+            };
+
+            try {
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create_user',
+                        adminEmail: adminCredentials.email,
+                        adminRole: adminCredentials.role,
+                        userData: testUser
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ SUCCESS: User created
+Name: ${data.user.name}
+Email: ${data.user.email}
+Role: ${data.user.role}
+ID: ${data.user.id}`;
+                    
+                    // Store the created user ID for later tests
+                    window.testUserId = data.user.id;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ERROR: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+            }
+        }
+
+        async function testUpdateUser() {
+            const resultDiv = document.getElementById('updateResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            
+            if (!window.testUserId) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ ERROR: No test user ID available. Please create a user first.';
+                return;
+            }
+
+            resultDiv.textContent = 'Updating test user...';
+
+            const updateData = {
+                name: 'Updated Test User',
+                email: 'updated' + Date.now() + '@test.com',
+                role: 'coaching_sisc',
+                level: 'Coaching User',
+                sector: 'SISC',
+                status: 'active',
+                subject: 'Science',
+                specialization: 'Physics'
+            };
+
+            try {
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update_user',
+                        adminEmail: adminCredentials.email,
+                        adminRole: adminCredentials.role,
+                        userId: window.testUserId,
+                        updateData: updateData
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ SUCCESS: User updated
+Name: ${data.user.name}
+Email: ${data.user.email}
+Role: ${data.user.role}
+Status: ${data.user.status}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ERROR: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+            }
+        }
+
+        async function testAssignHierarchy() {
+            const resultDiv = document.getElementById('hierarchyAssignResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            
+            if (!window.testUserId) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ ERROR: No test user ID available. Please create a user first.';
+                return;
+            }
+
+            resultDiv.textContent = 'Assigning hierarchy to test user...';
+
+            // First get hierarchy options to get valid IDs
+            try {
+                const optionsResponse = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_hierarchy_options',
+                        adminEmail: adminCredentials.email,
+                        adminRole: adminCredentials.role
+                    })
+                });
+
+                const optionsData = await optionsResponse.json();
+                
+                if (optionsData.status !== 'success') {
+                    throw new Error('Failed to load hierarchy options');
+                }
+
+                // Use first available PPD and School
+                const hierarchyData = {
+                    ppd_id: optionsData.ppd[0]?.id || null,
+                    school_id: optionsData.schools[0]?.id || null,
+                    subject: 'Mathematics',
+                    specialization: 'Advanced Mathematics'
+                };
+
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'assign_hierarchy',
+                        adminEmail: adminCredentials.email,
+                        adminRole: adminCredentials.role,
+                        userIdToAssign: window.testUserId,
+                        hierarchyData: hierarchyData
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ SUCCESS: Hierarchy assigned
+PPD ID: ${hierarchyData.ppd_id}
+School ID: ${hierarchyData.school_id}
+Subject: ${hierarchyData.subject}
+Specialization: ${hierarchyData.specialization}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ ERROR: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ NETWORK ERROR: ${error.message}`;
+            }
+        }
+
+        function testDashboardAccess() {
+            const resultDiv = document.getElementById('dashboardResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Opening dashboard user management page...';
+
+            // Open the dashboard in a new tab
+            const dashboardUrl = '/dashboard/admin/user-management';
+            window.open(dashboardUrl, '_blank');
+            
+            resultDiv.className = 'result success';
+            resultDiv.textContent = `✅ SUCCESS: Dashboard opened in new tab
+URL: ${dashboardUrl}
+
+Note: You need to login as admin to access the user management features.
+Use: admin@s4pd.gov.my with the system password.`;
+        }
+
+        // Auto-run basic tests on page load
+        window.addEventListener('load', function() {
+            console.log('🧪 New User Management Integration Test Page Loaded');
+            console.log('Click the test buttons to verify the integration');
+        });
+    </script>
+</body>
+</html>

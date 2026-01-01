@@ -3,39 +3,80 @@
 import { useState, useEffect } from 'react'
 
 interface User {
-  id: number
+  id: string
   email: string
   name: string
   role: string
   level: string
   sector: string
-  school_name?: string
   ppd_name?: string
-  yayasan?: string
-  is_active: boolean
-  last_login?: string
+  ppd_code?: string
+  school_name?: string
+  school_code?: string
+  subject?: string
+  specialization?: string
+  status: string
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
-interface PendingUser {
-  id: number
-  email: string
-  name: string
-  created_at: string
+interface HierarchyOptions {
+  ppd: Array<{
+    id: string
+    code: string
+    name: string
+    district: string
+  }>
+  schools: Array<{
+    id: string
+    code: string
+    name: string
+    ppd_id: string
+    ppd_name: string
+  }>
+  roles: Array<{
+    value: string
+    label: string
+    level: string
+  }>
+  subjects: string[]
 }
 
-interface UserStats {
-  total: number
-  active: number
-  inactive: number
-  byLevel: { [key: string]: number }
-  byRole: { [key: string]: number }
+// Helper functions
+const getRoleBadgeColor = (role: string) => {
+  const colors: { [key: string]: string } = {
+    'super_admin_s4pd': 'bg-purple-100 text-purple-800',
+    'admin_spb': 'bg-blue-100 text-blue-800',
+    'admin_spm': 'bg-indigo-100 text-indigo-800',
+    'strategic_jcorp': 'bg-green-100 text-green-800',
+    'strategic_hasanah': 'bg-teal-100 text-teal-800',
+    'tactical_ppd': 'bg-yellow-100 text-yellow-800',
+    'coaching_sisc': 'bg-orange-100 text-orange-800',
+    'operational_school': 'bg-pink-100 text-pink-800',
+    'operational_teacher': 'bg-gray-100 text-gray-800'
+  }
+  return colors[role] || 'bg-gray-100 text-gray-800'
+}
+
+const getRoleDisplayName = (role: string) => {
+  const names: { [key: string]: string } = {
+    'super_admin_s4pd': 'Super Admin S4PD',
+    'admin_spb': 'Admin SPB',
+    'admin_spm': 'Admin SPM',
+    'strategic_jcorp': 'Strategic JCorp',
+    'strategic_hasanah': 'Strategic Hasanah',
+    'tactical_ppd': 'Tactical PPD',
+    'coaching_sisc': 'SISC+',
+    'operational_school': 'Sekolah',
+    'operational_teacher': 'Guru'
+  }
+  return names[role] || role
 }
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
+  const [hierarchyOptions, setHierarchyOptions] = useState<HierarchyOptions | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterLevel, setFilterLevel] = useState('')
@@ -43,205 +84,89 @@ export default function UserManagementPage() {
   const [filterStatus, setFilterStatus] = useState('')
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [showEditUserModal, setShowEditUserModal] = useState(false)
+  const [showHierarchyModal, setShowHierarchyModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [usersPerPage] = useState(20)
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'loading' } | null>(null)
 
-  // User statistics
-  const [userStats, setUserStats] = useState<UserStats>({
-    total: 247,
-    active: 235,
-    inactive: 12,
-    byLevel: {
-      'Super Admin': 3,
-      'Admin': 8,
-      'Strategic Viewers': 5,
-      'Tactical User': 11,
-      'Coaching User': 66,
-      'Operational User': 154
-    },
-    byRole: {
-      'super_admin_s4pd': 3,
-      'admin_spb': 5,
-      'admin_spm': 3,
-      'strategic_jcorp': 3,
-      'strategic_hasanah': 2,
-      'tactical_ppd': 11,
-      'coaching_sisc': 66,
-      'operational_school': 22,
-      'operational_teacher': 132
-    }
-  })
+  // Get current admin info from session
+  const [currentAdmin, setCurrentAdmin] = useState<{ email: string; role: string } | null>(null)
 
-  // Generate sample users for demonstration
   useEffect(() => {
-    generateSampleUsers()
+    // Get admin info from session storage
+    const userSession = sessionStorage.getItem('currentUser')
+    if (userSession) {
+      const user = JSON.parse(userSession)
+      if (['super_admin_s4pd', 'admin_spb', 'admin_spm'].includes(user.role)) {
+        setCurrentAdmin({ email: user.email, role: user.role })
+        loadHierarchyOptions(user.email, user.role)
+        loadUsers(user.email, user.role)
+      } else {
+        showMessage('Akses ditolak. Hanya admin yang boleh mengurus pengguna.', 'error')
+      }
+    } else {
+      showMessage('Sila log masuk sebagai admin.', 'error')
+    }
   }, [])
 
-  const generateSampleUsers = () => {
-    const sampleUsers: User[] = []
-    let userId = 1
-
-    // Super Admin (3 users)
-    for (let i = 1; i <= 3; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `admin.s4pd${i}@moe.gov.my`,
-        name: `Admin S4PD ${i}`,
-        role: 'super_admin_s4pd',
-        level: 'Super Admin',
-        sector: 'S4PD',
-        is_active: true,
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      })
+  const showMessage = (text: string, type: 'success' | 'error' | 'loading') => {
+    setMessage({ text, type })
+    if (type === 'success') {
+      setTimeout(() => setMessage(null), 3000)
     }
+  }
 
-    // Admin SPB (5 users)
-    for (let i = 1; i <= 5; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `admin.spb${i}@moe.gov.my`,
-        name: `Admin SPB ${i}`,
-        role: 'admin_spb',
-        level: 'Admin',
-        sector: 'SPB',
-        is_active: i <= 4, // One inactive
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    // Admin SPM (3 users)
-    for (let i = 1; i <= 3; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `admin.spm${i}@moe.gov.my`,
-        name: `Admin SPM ${i}`,
-        role: 'admin_spm',
-        level: 'Admin',
-        sector: 'SPM',
-        is_active: true,
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    // Strategic JCorp (3 users)
-    for (let i = 1; i <= 3; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `strategic${i}@jcorp.com.my`,
-        name: `Strategic JCorp ${i}`,
-        role: 'strategic_jcorp',
-        level: 'Strategic Viewers',
-        sector: 'JCORP',
-        yayasan: 'Yayasan JCorp',
-        is_active: true,
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    // Strategic Hasanah (2 users)
-    for (let i = 1; i <= 2; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `strategic${i}@hasanah.com.my`,
-        name: `Strategic Hasanah ${i}`,
-        role: 'strategic_hasanah',
-        level: 'Strategic Viewers',
-        sector: 'HASANAH',
-        yayasan: 'Yayasan Hasanah',
-        is_active: true,
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    // PPD Users (11 users)
-    const ppdNames = ['Johor Bahru', 'Batu Pahat', 'Muar', 'Kluang', 'Pontian', 'Segamat', 'Kota Tinggi', 'Mersing', 'Kulai', 'Tangkak', 'Ledang']
-    for (let i = 1; i <= 11; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `ppd${i}@moe.gov.my`,
-        name: `PPD ${ppdNames[i-1]} ${i}`,
-        role: 'tactical_ppd',
-        level: 'Tactical User',
-        sector: 'PPD',
-        ppd_name: `PPD ${ppdNames[i-1]}`,
-        is_active: i <= 10, // One inactive
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      })
-    }
-
-    // SISC+ Users (66 users - 22 PPD x 3 subjects)
-    const subjects = ['Bahasa Melayu', 'Sejarah', 'Matematik']
-    for (let ppd = 1; ppd <= 22; ppd++) {
-      for (let subj = 0; subj < 3; subj++) {
-        sampleUsers.push({
-          id: userId++,
-          email: `sisc.ppd${ppd}.${subjects[subj].toLowerCase().replace(' ', '')}@moe.gov.my`,
-          name: `SISC+ ${subjects[subj]} PPD${ppd}`,
-          role: 'coaching_sisc',
-          level: 'Coaching User',
-          sector: 'SISC',
-          ppd_name: `PPD ${ppd}`,
-          is_active: Math.random() > 0.05, // 95% active
-          last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
+  const loadHierarchyOptions = async (adminEmail: string, adminRole: string) => {
+    try {
+      const response = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get_hierarchy_options',
+          adminEmail,
+          adminRole
         })
-      }
-    }
-
-    // School Users (22 users)
-    for (let i = 1; i <= 22; i++) {
-      sampleUsers.push({
-        id: userId++,
-        email: `sekolah${i}@moe-dl.edu.my`,
-        name: `Pentadbir Sekolah ${i}`,
-        role: 'operational_school',
-        level: 'Operational User',
-        sector: 'SCHOOL',
-        school_name: `SMK Johor ${i}`,
-        is_active: Math.random() > 0.05, // 95% active
-        last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
       })
-    }
 
-    // Teacher Users (132 users - 22 schools x 6 teachers)
-    for (let school = 1; school <= 22; school++) {
-      for (let teacher = 1; teacher <= 6; teacher++) {
-        const subjectIndex = (teacher - 1) % 3
-        sampleUsers.push({
-          id: userId++,
-          email: `guru${school}.${teacher}@moe-dl.edu.my`,
-          name: `Guru ${subjects[subjectIndex]} ${school}-${teacher}`,
-          role: 'operational_teacher',
-          level: 'Operational User',
-          sector: 'TEACHER',
-          school_name: `SMK Johor ${school}`,
-          is_active: Math.random() > 0.03, // 97% active
-          last_login: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
-        })
+      const data = await response.json()
+      if (data.status === 'success') {
+        setHierarchyOptions(data)
+      } else {
+        showMessage('Gagal memuat pilihan hierarki: ' + data.error, 'error')
       }
+    } catch (error) {
+      showMessage('Gagal memuat pilihan hierarki: ' + (error as Error).message, 'error')
     }
+  }
 
-    setUsers(sampleUsers)
-    setFilteredUsers(sampleUsers)
-    setLoading(false)
+  const loadUsers = async (adminEmail: string, adminRole: string) => {
+    try {
+      showMessage('Memuat pengguna...', 'loading')
+      
+      const response = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'list_all_users',
+          adminEmail,
+          adminRole
+        })
+      })
+
+      const data = await response.json()
+      if (data.status === 'success') {
+        setUsers(data.users)
+        setFilteredUsers(data.users)
+        showMessage(`Berjaya memuat ${data.total} pengguna`, 'success')
+      } else {
+        showMessage('Gagal memuat pengguna: ' + data.error, 'error')
+      }
+    } catch (error) {
+      showMessage('Gagal memuat pengguna: ' + (error as Error).message, 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Filter and search functionality
@@ -265,7 +190,7 @@ export default function UserManagementPage() {
 
     if (filterStatus) {
       filtered = filtered.filter(user => 
-        filterStatus === 'active' ? user.is_active : !user.is_active
+        filterStatus === 'active' ? user.status === 'active' : user.status !== 'active'
       )
     }
 
@@ -285,58 +210,51 @@ export default function UserManagementPage() {
     setShowEditUserModal(true)
   }
 
-  const handleResetPassword = (user: User) => {
-    if (confirm(`Reset kata laluan untuk ${user.name}?`)) {
-      // In production, call API to reset password
-      alert(`Kata laluan untuk ${user.name} telah direset. Kata laluan sementara telah dihantar ke ${user.email}`)
-    }
+  const handleAssignHierarchy = (user: User) => {
+    setSelectedUser(user)
+    setShowHierarchyModal(true)
   }
 
-  const handleToggleUserStatus = (user: User) => {
-    const action = user.is_active ? 'nyahaktifkan' : 'aktifkan'
-    if (confirm(`${action} pengguna ${user.name}?`)) {
-      setUsers(prev => prev.map(u => 
-        u.id === user.id ? { ...u, is_active: !u.is_active, updated_at: new Date().toISOString() } : u
-      ))
-      alert(`Pengguna ${user.name} telah ${user.is_active ? 'dinyahaktifkan' : 'diaktifkan'}`)
-    }
-  }
-
-  const handleDeleteUser = (user: User) => {
+  const handleDeleteUser = async (user: User) => {
+    if (!currentAdmin) return
+    
     if (confirm(`Padam pengguna ${user.name}? Tindakan ini tidak boleh dibatalkan.`)) {
-      setUsers(prev => prev.filter(u => u.id !== user.id))
-      alert(`Pengguna ${user.name} telah dipadam`)
+      try {
+        showMessage('Memadam pengguna...', 'loading')
+        
+        const response = await fetch('/api/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'delete_user',
+            adminEmail: currentAdmin.email,
+            adminRole: currentAdmin.role,
+            userIdToDelete: user.id
+          })
+        })
+
+        const data = await response.json()
+        if (data.status === 'success') {
+          showMessage('Pengguna berjaya dipadam', 'success')
+          loadUsers(currentAdmin.email, currentAdmin.role)
+        } else {
+          showMessage('Gagal memadam pengguna: ' + data.error, 'error')
+        }
+      } catch (error) {
+        showMessage('Gagal memadam pengguna: ' + (error as Error).message, 'error')
+      }
     }
   }
 
-  const getRoleBadgeColor = (role: string) => {
-    const colors: { [key: string]: string } = {
-      'super_admin_s4pd': 'bg-purple-100 text-purple-800',
-      'admin_spb': 'bg-blue-100 text-blue-800',
-      'admin_spm': 'bg-indigo-100 text-indigo-800',
-      'strategic_jcorp': 'bg-green-100 text-green-800',
-      'strategic_hasanah': 'bg-teal-100 text-teal-800',
-      'tactical_ppd': 'bg-yellow-100 text-yellow-800',
-      'coaching_sisc': 'bg-orange-100 text-orange-800',
-      'operational_school': 'bg-pink-100 text-pink-800',
-      'operational_teacher': 'bg-gray-100 text-gray-800'
-    }
-    return colors[role] || 'bg-gray-100 text-gray-800'
-  }
-
-  const getRoleDisplayName = (role: string) => {
-    const names: { [key: string]: string } = {
-      'super_admin_s4pd': 'Super Admin S4PD',
-      'admin_spb': 'Admin SPB',
-      'admin_spm': 'Admin SPM',
-      'strategic_jcorp': 'Strategic JCorp',
-      'strategic_hasanah': 'Strategic Hasanah',
-      'tactical_ppd': 'Tactical PPD',
-      'coaching_sisc': 'SISC+',
-      'operational_school': 'Sekolah',
-      'operational_teacher': 'Guru'
-    }
-    return names[role] || role
+  // Calculate statistics
+  const userStats = {
+    total: users.length,
+    active: users.filter(u => u.status === 'active').length,
+    inactive: users.filter(u => u.status !== 'active').length,
+    byLevel: users.reduce((acc, user) => {
+      acc[user.level] = (acc[user.level] || 0) + 1
+      return acc
+    }, {} as { [key: string]: number })
   }
 
   if (loading) {
@@ -347,13 +265,35 @@ export default function UserManagementPage() {
     )
   }
 
+  if (!currentAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">Akses Ditolak</div>
+          <p className="text-gray-600">Hanya admin yang boleh mengakses halaman ini.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Pengurusan Pengguna</h1>
-        <p className="text-gray-600 mt-2">Urus 247 pengguna merentas 9 level dalam sistem JohorUP</p>
+        <h1 className="text-3xl font-bold text-gray-900">Pengurusan Pengguna Hierarki</h1>
+        <p className="text-gray-600 mt-2">Urus {userStats.total} pengguna dengan sistem hierarki organisasi</p>
       </div>
+
+      {/* Message Display */}
+      {message && (
+        <div className={`mb-6 p-4 rounded-lg ${
+          message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
+          message.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
+          'bg-blue-50 text-blue-800 border border-blue-200'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -403,7 +343,7 @@ export default function UserManagementPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Level Pengguna</p>
-              <p className="text-3xl font-bold text-purple-600">9</p>
+              <p className="text-3xl font-bold text-purple-600">{Object.keys(userStats.byLevel).length}</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,17 +355,19 @@ export default function UserManagementPage() {
       </div>
 
       {/* User Level Distribution */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Taburan Mengikut Level Pengguna</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Object.entries(userStats.byLevel).map(([level, count]) => (
-            <div key={level} className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">{count}</div>
-              <div className="text-sm text-gray-600">{level}</div>
-            </div>
-          ))}
+      {Object.keys(userStats.byLevel).length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Taburan Mengikut Level Pengguna</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {Object.entries(userStats.byLevel).map(([level, count]) => (
+              <div key={level} className="text-center p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-gray-900">{count}</div>
+                <div className="text-sm text-gray-600">{level}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
@@ -447,12 +389,9 @@ export default function UserManagementPage() {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Semua Level</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="Admin">Admin</option>
-              <option value="Strategic Viewers">Strategic Viewers</option>
-              <option value="Tactical User">Tactical User</option>
-              <option value="Coaching User">Coaching User</option>
-              <option value="Operational User">Operational User</option>
+              {hierarchyOptions?.roles.map(role => (
+                <option key={role.level} value={role.level}>{role.level}</option>
+              ))}
             </select>
 
             <select
@@ -461,15 +400,9 @@ export default function UserManagementPage() {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Semua Peranan</option>
-              <option value="super_admin_s4pd">Super Admin S4PD</option>
-              <option value="admin_spb">Admin SPB</option>
-              <option value="admin_spm">Admin SPM</option>
-              <option value="strategic_jcorp">Strategic JCorp</option>
-              <option value="strategic_hasanah">Strategic Hasanah</option>
-              <option value="tactical_ppd">Tactical PPD</option>
-              <option value="coaching_sisc">SISC+</option>
-              <option value="operational_school">Sekolah</option>
-              <option value="operational_teacher">Guru</option>
+              {hierarchyOptions?.roles.map(role => (
+                <option key={role.value} value={role.value}>{role.label}</option>
+              ))}
             </select>
 
             <select
@@ -519,13 +452,10 @@ export default function UserManagementPage() {
                   Peranan & Level
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Organisasi
+                  Hierarki Organisasi
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Login Terakhir
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tindakan
@@ -538,7 +468,7 @@ export default function UserManagementPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                        user.is_active ? 'bg-green-500' : 'bg-gray-400'
+                        user.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
                       }`}>
                         {user.name.charAt(0).toUpperCase()}
                       </div>
@@ -554,22 +484,35 @@ export default function UserManagementPage() {
                         {getRoleDisplayName(user.role)}
                       </span>
                       <div className="text-xs text-gray-500 mt-1">{user.level}</div>
+                      {user.subject && (
+                        <div className="text-xs text-blue-600 mt-1">📚 {user.subject}</div>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.school_name || user.ppd_name || user.yayasan || user.sector}
+                    <div>
+                      {user.ppd_name && (
+                        <div className="text-sm font-medium">🏛️ {user.ppd_name}</div>
+                      )}
+                      {user.school_name && (
+                        <div className="text-sm">🏫 {user.school_name}</div>
+                      )}
+                      {user.specialization && (
+                        <div className="text-xs text-gray-500 mt-1">🎯 {user.specialization}</div>
+                      )}
+                      {!user.ppd_name && !user.school_name && (
+                        <div className="text-sm text-gray-500">{user.sector}</div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.is_active 
+                      user.status === 'active' 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {user.is_active ? 'Aktif' : 'Tidak Aktif'}
+                      {user.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.last_login ? new Date(user.last_login).toLocaleDateString('ms-MY') : 'Belum login'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
@@ -583,28 +526,13 @@ export default function UserManagementPage() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleResetPassword(user)}
-                        className="text-yellow-600 hover:text-yellow-900"
-                        title="Reset kata laluan"
+                        onClick={() => handleAssignHierarchy(user)}
+                        className="text-purple-600 hover:text-purple-900"
+                        title="Tetapkan hierarki"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v-2L4.257 10.257a6 6 0 0111.486-3.486L16 6.5V7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                      </button>
-                      <button
-                        onClick={() => handleToggleUserStatus(user)}
-                        className={user.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}
-                        title={user.is_active ? 'Nyahaktifkan' : 'Aktifkan'}
-                      >
-                        {user.is_active ? (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        )}
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user)}
@@ -671,30 +599,59 @@ export default function UserManagementPage() {
         )}
       </div>
 
-      {/* Edit User Modal */}
-      {showEditUserModal && selectedUser && (
+      {/* Modals */}
+      {showEditUserModal && selectedUser && hierarchyOptions && (
         <EditUserModal
           user={selectedUser}
+          hierarchyOptions={hierarchyOptions}
+          currentAdmin={currentAdmin}
           onClose={() => {
             setShowEditUserModal(false)
             setSelectedUser(null)
           }}
-          onSave={(updatedUser) => {
-            setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u))
+          onSave={() => {
             setShowEditUserModal(false)
             setSelectedUser(null)
+            if (currentAdmin) {
+              loadUsers(currentAdmin.email, currentAdmin.role)
+            }
           }}
+          onMessage={showMessage}
         />
       )}
 
-      {/* Add User Modal */}
-      {showAddUserModal && (
+      {showAddUserModal && hierarchyOptions && (
         <AddUserModal
+          hierarchyOptions={hierarchyOptions}
+          currentAdmin={currentAdmin}
           onClose={() => setShowAddUserModal(false)}
-          onSave={(newUser) => {
-            setUsers(prev => [...prev, { ...newUser, id: Date.now() }])
+          onSave={() => {
             setShowAddUserModal(false)
+            if (currentAdmin) {
+              loadUsers(currentAdmin.email, currentAdmin.role)
+            }
           }}
+          onMessage={showMessage}
+        />
+      )}
+
+      {showHierarchyModal && selectedUser && hierarchyOptions && (
+        <HierarchyAssignmentModal
+          user={selectedUser}
+          hierarchyOptions={hierarchyOptions}
+          currentAdmin={currentAdmin}
+          onClose={() => {
+            setShowHierarchyModal(false)
+            setSelectedUser(null)
+          }}
+          onSave={() => {
+            setShowHierarchyModal(false)
+            setSelectedUser(null)
+            if (currentAdmin) {
+              loadUsers(currentAdmin.email, currentAdmin.role)
+            }
+          }}
+          onMessage={showMessage}
         />
       )}
     </div>
@@ -704,36 +661,89 @@ export default function UserManagementPage() {
 // Edit User Modal Component
 function EditUserModal({ 
   user, 
+  hierarchyOptions,
+  currentAdmin,
   onClose, 
-  onSave 
+  onSave,
+  onMessage
 }: {
   user: User
+  hierarchyOptions: HierarchyOptions
+  currentAdmin: { email: string; role: string } | null
   onClose: () => void
-  onSave: (user: User) => void
+  onSave: () => void
+  onMessage: (text: string, type: 'success' | 'error' | 'loading') => void
 }) {
   const [formData, setFormData] = useState({
     name: user.name,
     email: user.email,
     role: user.role,
-    is_active: user.is_active
+    level: user.level,
+    sector: user.sector,
+    status: user.status,
+    subject: user.subject || '',
+    specialization: user.specialization || ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    const updatedUser: User = {
-      ...user,
-      ...formData,
-      updated_at: new Date().toISOString()
+    if (!currentAdmin) return
+
+    try {
+      onMessage('Mengemaskini pengguna...', 'loading')
+      
+      const response = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_user',
+          adminEmail: currentAdmin.email,
+          adminRole: currentAdmin.role,
+          userId: user.id,
+          updateData: formData
+        })
+      })
+
+      const data = await response.json()
+      if (data.status === 'success') {
+        onMessage('Pengguna berjaya dikemaskini', 'success')
+        onSave()
+      } else {
+        onMessage('Gagal mengemaskini pengguna: ' + data.error, 'error')
+      }
+    } catch (error) {
+      onMessage('Gagal mengemaskini pengguna: ' + (error as Error).message, 'error')
     }
-    
-    onSave(updatedUser)
-    alert(`Pengguna ${formData.name} telah dikemaskini`)
+  }
+
+  const updateRoleFields = (role: string) => {
+    const roleData = hierarchyOptions.roles.find(r => r.value === role)
+    if (roleData) {
+      const sectorMapping: { [key: string]: string } = {
+        'super_admin_s4pd': 'S4PD',
+        'admin_spb': 'SPB',
+        'admin_spm': 'SPM',
+        'strategic_jcorp': 'JCORP',
+        'strategic_hasanah': 'HASANAH',
+        'tactical_ppd': 'PPD',
+        'coaching_sisc': 'SISC',
+        'operational_school': 'SCHOOL',
+        'operational_teacher': 'TEACHER'
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        role,
+        level: roleData.level,
+        sector: sectorMapping[role] || 'GENERAL'
+      }))
+    }
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Edit Pengguna</h3>
           <button
@@ -779,45 +789,89 @@ function EditUserModal({
             </label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) => updateRoleFields(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
             >
-              <optgroup label="Super Admin (3 pengguna)">
-                <option value="super_admin_s4pd">Super Admin S4PD</option>
-              </optgroup>
-              <optgroup label="Admin (8 pengguna)">
-                <option value="admin_spb">Admin SPB</option>
-                <option value="admin_spm">Admin SPM</option>
-              </optgroup>
-              <optgroup label="Strategic Viewers (5 pengguna)">
-                <option value="strategic_jcorp">Strategic JCorp</option>
-                <option value="strategic_hasanah">Strategic Hasanah</option>
-              </optgroup>
-              <optgroup label="Tactical User (11 pengguna)">
-                <option value="tactical_ppd">Tactical PPD</option>
-              </optgroup>
-              <optgroup label="Coaching User (66 pengguna)">
-                <option value="coaching_sisc">SISC+</option>
-              </optgroup>
-              <optgroup label="Operational User (154 pengguna)">
-                <option value="operational_school">Sekolah</option>
-                <option value="operational_teacher">Guru</option>
-              </optgroup>
+              <option value="">Pilih Peranan</option>
+              {hierarchyOptions.roles.map(role => (
+                <option key={role.value} value={role.value}>{role.label}</option>
+              ))}
             </select>
           </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
-              Pengguna Aktif
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Level
             </label>
+            <input
+              type="text"
+              value={formData.level}
+              readOnly
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+            />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sektor
+            </label>
+            <input
+              type="text"
+              value={formData.sector}
+              onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="active">Aktif</option>
+              <option value="inactive">Tidak Aktif</option>
+            </select>
+          </div>
+
+          {(formData.role === 'operational_teacher' || formData.role === 'coaching_sisc') && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mata Pelajaran
+                </label>
+                <select
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Pilih Mata Pelajaran</option>
+                  {hierarchyOptions.subjects.map(subject => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kepakaran
+                </label>
+                <input
+                  type="text"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Contoh: Matematik Tambahan, Sains Komputer"
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex gap-3 pt-4">
             <button
@@ -842,52 +896,103 @@ function EditUserModal({
 
 // Add User Modal Component
 function AddUserModal({ 
+  hierarchyOptions,
+  currentAdmin,
   onClose, 
-  onSave 
+  onSave,
+  onMessage
 }: {
+  hierarchyOptions: HierarchyOptions
+  currentAdmin: { email: string; role: string } | null
   onClose: () => void
-  onSave: (user: Omit<User, 'id'>) => void
+  onSave: () => void
+  onMessage: (text: string, type: 'success' | 'error' | 'loading') => void
 }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: '',
-    is_active: true
+    level: '',
+    sector: '',
+    ppd_id: '',
+    school_id: '',
+    subject: '',
+    specialization: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Determine level and sector based on role
-    const roleMapping: { [key: string]: { level: string, sector: string } } = {
-      'super_admin_s4pd': { level: 'Super Admin', sector: 'S4PD' },
-      'admin_spb': { level: 'Admin', sector: 'SPB' },
-      'admin_spm': { level: 'Admin', sector: 'SPM' },
-      'strategic_jcorp': { level: 'Strategic Viewers', sector: 'JCORP' },
-      'strategic_hasanah': { level: 'Strategic Viewers', sector: 'HASANAH' },
-      'tactical_ppd': { level: 'Tactical User', sector: 'PPD' },
-      'coaching_sisc': { level: 'Coaching User', sector: 'SISC' },
-      'operational_school': { level: 'Operational User', sector: 'SCHOOL' },
-      'operational_teacher': { level: 'Operational User', sector: 'TEACHER' }
-    }
+    if (!currentAdmin) return
 
-    const roleInfo = roleMapping[formData.role]
-    
-    const newUser: Omit<User, 'id'> = {
-      ...formData,
-      level: roleInfo.level,
-      sector: roleInfo.sector,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    try {
+      onMessage('Menambah pengguna...', 'loading')
+      
+      const response = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create_user',
+          adminEmail: currentAdmin.email,
+          adminRole: currentAdmin.role,
+          userData: {
+            ...formData,
+            ppd_id: formData.ppd_id || null,
+            school_id: formData.school_id || null,
+            subject: formData.subject || null,
+            specialization: formData.specialization || null
+          }
+        })
+      })
+
+      const data = await response.json()
+      if (data.status === 'success') {
+        onMessage('Pengguna berjaya ditambah', 'success')
+        onSave()
+      } else {
+        onMessage('Gagal menambah pengguna: ' + data.error, 'error')
+      }
+    } catch (error) {
+      onMessage('Gagal menambah pengguna: ' + (error as Error).message, 'error')
     }
-    
-    onSave(newUser)
-    alert(`Pengguna ${formData.name} telah ditambah`)
   }
+
+  const updateRoleFields = (role: string) => {
+    const roleData = hierarchyOptions.roles.find(r => r.value === role)
+    if (roleData) {
+      const sectorMapping: { [key: string]: string } = {
+        'super_admin_s4pd': 'S4PD',
+        'admin_spb': 'SPB',
+        'admin_spm': 'SPM',
+        'strategic_jcorp': 'JCORP',
+        'strategic_hasanah': 'HASANAH',
+        'tactical_ppd': 'PPD',
+        'coaching_sisc': 'SISC',
+        'operational_school': 'SCHOOL',
+        'operational_teacher': 'TEACHER'
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        role,
+        level: roleData.level,
+        sector: sectorMapping[role] || 'GENERAL'
+      }))
+    }
+  }
+
+  const filterSchoolsByPPD = (ppdId: string) => {
+    setFormData(prev => ({ ...prev, ppd_id: ppdId, school_id: '' }))
+  }
+
+  const filteredSchools = hierarchyOptions.schools.filter(school => 
+    formData.ppd_id ? school.ppd_id === formData.ppd_id : true
+  )
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Tambah Pengguna Baru</h3>
           <button
@@ -901,85 +1006,169 @@ function AddUserModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nama Pengguna
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Masukkan nama pengguna"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nama Pengguna
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Masukkan nama pengguna"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Emel
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="pengguna@domain.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kata Laluan Sementara
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Kata laluan sementara"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Peranan
+              </label>
+              <select
+                value={formData.role}
+                onChange={(e) => updateRoleFields(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Pilih Peranan</option>
+                {hierarchyOptions.roles.map(role => (
+                  <option key={role.value} value={role.value}>{role.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Level
+              </label>
+              <input
+                type="text"
+                value={formData.level}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sektor
+              </label>
+              <input
+                type="text"
+                value={formData.sector}
+                onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Emel
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="pengguna@domain.com"
-              required
-            />
-          </div>
+          {/* Hierarchy Assignment Section */}
+          {['tactical_ppd', 'coaching_sisc', 'operational_school', 'operational_teacher'].includes(formData.role) && (
+            <div className="border-t pt-4">
+              <h4 className="text-md font-semibold text-gray-900 mb-3">Penetapan Hierarki Organisasi</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    PPD
+                  </label>
+                  <select
+                    value={formData.ppd_id}
+                    onChange={(e) => filterSchoolsByPPD(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Pilih PPD</option>
+                    {hierarchyOptions.ppd.map(ppd => (
+                      <option key={ppd.id} value={ppd.id}>{ppd.name} ({ppd.district})</option>
+                    ))}
+                  </select>
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Peranan
-            </label>
-            <select
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Pilih Peranan</option>
-              <optgroup label="Super Admin (3 pengguna)">
-                <option value="super_admin_s4pd">Super Admin S4PD</option>
-              </optgroup>
-              <optgroup label="Admin (8 pengguna)">
-                <option value="admin_spb">Admin SPB</option>
-                <option value="admin_spm">Admin SPM</option>
-              </optgroup>
-              <optgroup label="Strategic Viewers (5 pengguna)">
-                <option value="strategic_jcorp">Strategic JCorp</option>
-                <option value="strategic_hasanah">Strategic Hasanah</option>
-              </optgroup>
-              <optgroup label="Tactical User (11 pengguna)">
-                <option value="tactical_ppd">Tactical PPD</option>
-              </optgroup>
-              <optgroup label="Coaching User (66 pengguna)">
-                <option value="coaching_sisc">SISC+</option>
-              </optgroup>
-              <optgroup label="Operational User (154 pengguna)">
-                <option value="operational_school">Sekolah</option>
-                <option value="operational_teacher">Guru</option>
-              </optgroup>
-            </select>
-          </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Sekolah
+                  </label>
+                  <select
+                    value={formData.school_id}
+                    onChange={(e) => setFormData({ ...formData, school_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    disabled={!formData.ppd_id}
+                  >
+                    <option value="">Pilih Sekolah</option>
+                    {filteredSchools.map(school => (
+                      <option key={school.id} value={school.id}>{school.name}</option>
+                    ))}
+                  </select>
+                </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="new_is_active"
-              checked={formData.is_active}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label htmlFor="new_is_active" className="ml-2 text-sm text-gray-700">
-              Aktifkan pengguna selepas ditambah
-            </label>
-          </div>
+                {(formData.role === 'operational_teacher' || formData.role === 'coaching_sisc') && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Mata Pelajaran
+                      </label>
+                      <select
+                        value={formData.subject}
+                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Pilih Mata Pelajaran</option>
+                        {hierarchyOptions.subjects.map(subject => (
+                          <option key={subject} value={subject}>{subject}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Kepakaran
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.specialization}
+                        onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Contoh: Matematik Tambahan, Sains Komputer"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="bg-blue-50 p-3 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Nota:</strong> Kata laluan sementara akan dihantar ke emel pengguna selepas akaun dibuat.
+              <strong>Nota:</strong> Pengguna akan menerima emel dengan kata laluan sementara dan perlu menukar kata laluan pada log masuk pertama.
             </p>
           </div>
 
@@ -1004,166 +1193,216 @@ function AddUserModal({
   )
 }
 
-function PendingUserCard({ 
-  user, 
-  schools, 
-  ppds, 
-  onApprove, 
-  onReject 
+// Hierarchy Assignment Modal Component
+function HierarchyAssignmentModal({ 
+  user,
+  hierarchyOptions,
+  currentAdmin,
+  onClose, 
+  onSave,
+  onMessage
 }: {
-  user: PendingUser
-  schools: any[]
-  ppds: any[]
-  onApprove: (userId: number, role: string, schoolId?: number, ppdId?: number) => void
-  onReject: (userId: number) => void
+  user: User
+  hierarchyOptions: HierarchyOptions
+  currentAdmin: { email: string; role: string } | null
+  onClose: () => void
+  onSave: () => void
+  onMessage: (text: string, type: 'success' | 'error' | 'loading') => void
 }) {
-  const [selectedRole, setSelectedRole] = useState('')
-  const [selectedSchool, setSelectedSchool] = useState('')
-  const [selectedPPD, setSelectedPPD] = useState('')
+  const [formData, setFormData] = useState({
+    ppd_id: user.ppd_name ? hierarchyOptions.ppd.find(p => p.name === user.ppd_name)?.id || '' : '',
+    school_id: user.school_name ? hierarchyOptions.schools.find(s => s.name === user.school_name)?.id || '' : '',
+    subject: user.subject || '',
+    specialization: user.specialization || ''
+  })
 
-  const handleApprove = () => {
-    if (!selectedRole) {
-      alert('Sila pilih peranan')
-      return
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!currentAdmin) return
+
+    try {
+      onMessage('Menetapkan hierarki...', 'loading')
+      
+      const response = await fetch('/api/admin-users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'assign_hierarchy',
+          adminEmail: currentAdmin.email,
+          adminRole: currentAdmin.role,
+          userIdToAssign: user.id,
+          hierarchyData: {
+            ppd_id: formData.ppd_id || null,
+            school_id: formData.school_id || null,
+            subject: formData.subject || null,
+            specialization: formData.specialization || null
+          }
+        })
+      })
+
+      const data = await response.json()
+      if (data.status === 'success') {
+        onMessage('Hierarki berjaya ditetapkan', 'success')
+        onSave()
+      } else {
+        onMessage('Gagal menetapkan hierarki: ' + data.error, 'error')
+      }
+    } catch (error) {
+      onMessage('Gagal menetapkan hierarki: ' + (error as Error).message, 'error')
     }
-
-    if (selectedRole === 'school' && !selectedSchool) {
-      alert('Sila pilih sekolah')
-      return
-    }
-
-    if (selectedRole === 'ppd' && !selectedPPD) {
-      alert('Sila pilih PPD')
-      return
-    }
-
-    onApprove(
-      user.id, 
-      selectedRole, 
-      selectedRole === 'school' ? parseInt(selectedSchool) : undefined,
-      selectedRole === 'ppd' ? parseInt(selectedPPD) : undefined
-    )
   }
 
-  // Determine suggested role based on email domain
-  const domain = user.email.split('@')[1]
-  const suggestedRole = domain === 'moe-dl.edu.my' ? 'school' : 
-                       domain === 'moe.gov.my' ? 'ppd' : ''
+  const filterSchoolsByPPD = (ppdId: string) => {
+    setFormData(prev => ({ ...prev, ppd_id: ppdId, school_id: '' }))
+  }
+
+  const filteredSchools = hierarchyOptions.schools.filter(school => 
+    formData.ppd_id ? school.ppd_id === formData.ppd_id : true
+  )
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Tetapkan Hierarki Organisasi</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Current User Info */}
+        <div className="bg-gray-50 p-4 rounded-lg mb-6">
+          <h4 className="font-semibold text-gray-900 mb-2">Maklumat Pengguna</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Nama:</span> {user.name}
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
-              <p className="text-sm text-gray-500">{user.email}</p>
-              <p className="text-xs text-gray-400">
-                Dimohon pada: {new Date(user.created_at).toLocaleString('ms-MY')}
-              </p>
+              <span className="font-medium">Emel:</span> {user.email}
+            </div>
+            <div>
+              <span className="font-medium">Peranan:</span> {getRoleDisplayName(user.role)}
+            </div>
+            <div>
+              <span className="font-medium">Level:</span> {user.level}
             </div>
           </div>
+        </div>
 
-          {suggestedRole && (
-            <div className="mb-3 p-2 bg-blue-50 rounded text-sm text-blue-700">
-              💡 Cadangan: {suggestedRole} (berdasarkan domain email)
+        {/* Current Hierarchy */}
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <h4 className="font-semibold text-gray-900 mb-2">Hierarki Semasa</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="font-medium">PPD:</span> {user.ppd_name || 'Tidak ditetapkan'}
             </div>
-          )}
+            <div>
+              <span className="font-medium">Sekolah:</span> {user.school_name || 'Tidak ditetapkan'}
+            </div>
+            <div>
+              <span className="font-medium">Mata Pelajaran:</span> {user.subject || 'Tidak ditetapkan'}
+            </div>
+            <div>
+              <span className="font-medium">Kepakaran:</span> {user.specialization || 'Tidak ditetapkan'}
+            </div>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <h4 className="font-semibold text-gray-900">Hierarki Baharu</h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Peranan
+                PPD
               </label>
               <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.ppd_id}
+                onChange={(e) => filterSchoolsByPPD(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Pilih Peranan</option>
-                <optgroup label="Super Admin (3 pengguna)">
-                  <option value="super_admin_s4pd">Super Admin S4PD - Sektor Perancangan dan Pengurusan PPD</option>
-                </optgroup>
-                <optgroup label="Admin (8 pengguna)">
-                  <option value="admin_spb">Admin SPB - Sektor Pembelajaran</option>
-                  <option value="admin_spm">Admin SPM - Sektor Pembangunan Murid</option>
-                </optgroup>
-                <optgroup label="Strategic Viewers (5 pengguna)">
-                  <option value="strategic_jcorp">Strategic Viewer - Yayasan JCorp</option>
-                  <option value="strategic_hasanah">Strategic Viewer - Yayasan Hasanah</option>
-                </optgroup>
-                <optgroup label="Tactical User (11 pengguna)">
-                  <option value="tactical_ppd">Tactical User - Pejabat Pendidikan Daerah</option>
-                </optgroup>
-                <optgroup label="Coaching User (66 pengguna)">
-                  <option value="coaching_sisc">Coaching User - School Improvement Specialist Coach Plus (SISC+)</option>
-                </optgroup>
-                <optgroup label="Operational User (154 pengguna)">
-                  <option value="operational_school">Operational User - Sekolah</option>
-                  <option value="operational_teacher">Operational User - Guru</option>
-                </optgroup>
+                <option value="">Pilih PPD</option>
+                {hierarchyOptions.ppd.map(ppd => (
+                  <option key={ppd.id} value={ppd.id}>{ppd.name} ({ppd.district})</option>
+                ))}
               </select>
             </div>
 
-            {selectedRole === 'school' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sekolah
-                </label>
-                <select
-                  value={selectedSchool}
-                  onChange={(e) => setSelectedSchool(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Pilih Sekolah</option>
-                  {schools.map(school => (
-                    <option key={school.id} value={school.id}>{school.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sekolah
+              </label>
+              <select
+                value={formData.school_id}
+                onChange={(e) => setFormData({ ...formData, school_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                disabled={!formData.ppd_id}
+              >
+                <option value="">Pilih Sekolah</option>
+                {filteredSchools.map(school => (
+                  <option key={school.id} value={school.id}>{school.name}</option>
+                ))}
+              </select>
+            </div>
 
-            {selectedRole === 'ppd' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  PPD
-                </label>
-                <select
-                  value={selectedPPD}
-                  onChange={(e) => setSelectedPPD(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Pilih PPD</option>
-                  {ppds.map(ppd => (
-                    <option key={ppd.id} value={ppd.id}>{ppd.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mata Pelajaran
+              </label>
+              <select
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Pilih Mata Pelajaran</option>
+                {hierarchyOptions.subjects.map(subject => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Kepakaran
+              </label>
+              <input
+                type="text"
+                value={formData.specialization}
+                onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Contoh: Matematik Tambahan, Sains Komputer"
+              />
+            </div>
           </div>
 
-          <div className="flex space-x-3">
+          <div className="bg-yellow-50 p-3 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>Nota:</strong> Penetapan hierarki akan menentukan data yang boleh diakses oleh pengguna ini dalam sistem.
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-4">
             <button
-              onClick={handleApprove}
-              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              type="submit"
+              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
             >
-              Luluskan
+              Tetapkan Hierarki
             </button>
             <button
-              onClick={() => onReject(user.id)}
-              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
-              Tolak
+              Batal
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   )

@@ -2,22 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDashboardStats, useStudentsData, useTeachersData, useSchoolsData, getRoleDisplayName, getScopeDescription } from '@/lib/useHierarchicalData';
 
 export default function SISCDashboard() {
-  const [user, setUser] = useState<any>(null);
+  const { data: statsData, user, loading: statsLoading } = useDashboardStats();
+  const { data: studentsData, loading: studentsLoading } = useStudentsData();
+  const { data: teachersData, loading: teachersLoading } = useTeachersData();
+  const { data: schoolsData, loading: schoolsLoading } = useSchoolsData();
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+  const stats = statsData?.dashboard_stats || {};
+  const students = studentsData?.students || [];
+  const teachers = teachersData?.teachers || [];
+  const schools = schoolsData?.schools || [];
+
+  const loading = statsLoading || studentsLoading || teachersLoading || schoolsLoading;
 
   const getSISCSubject = () => {
-    if (user?.email?.includes('bahasamelayu')) return 'Bahasa Melayu';
-    if (user?.email?.includes('sejarah')) return 'Sejarah';
-    if (user?.email?.includes('matematik')) return 'Matematik';
-    return 'Subjek Khusus';
+    if (!user) return 'Subjek Khusus';
+    return user.subject || 'Subjek Khusus';
   };
 
   const getSubjectColor = () => {
@@ -27,6 +29,14 @@ export default function SISCDashboard() {
     if (subject === 'Matematik') return 'bg-purple-50 border-purple-200 text-purple-800';
     return 'bg-gray-50 border-gray-200 text-gray-800';
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!user || user.role !== 'coaching_sisc') {
     return (
@@ -44,8 +54,13 @@ export default function SISCDashboard() {
       <div className="border-b border-gray-200 pb-4">
         <h1 className="text-3xl font-bold text-gray-900">SISC+ Dashboard</h1>
         <p className="text-gray-600 mt-1">School Improvement Specialist Coach Plus</p>
-        <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 border-2 ${getSubjectColor()}`}>
-          Subjek: {getSISCSubject()}
+        <div className="flex items-center gap-4 mt-2">
+          <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium border-2 ${getSubjectColor()}`}>
+            Subjek: {getSISCSubject()}
+          </div>
+          <div className="text-sm text-gray-600">
+            Skop: {getScopeDescription(user.role, user)}
+          </div>
         </div>
       </div>
 
@@ -57,7 +72,7 @@ export default function SISCDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              0
+              {teachers.length}
             </div>
             <p className="text-xs text-gray-500 mt-1">Guru subjek {getSISCSubject()}</p>
           </CardContent>
@@ -69,9 +84,9 @@ export default function SISCDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              0
+              {schools.length}
             </div>
-            <p className="text-xs text-gray-500 mt-1">Sekolah dalam daerah</p>
+            <p className="text-xs text-gray-500 mt-1">Sekolah dalam {user.ppd_name || 'daerah'}</p>
           </CardContent>
         </Card>
 
@@ -81,7 +96,7 @@ export default function SISCDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              0
+              {students.length}
             </div>
             <p className="text-xs text-gray-500 mt-1">Murid dari sekolah daerah</p>
           </CardContent>
@@ -93,7 +108,7 @@ export default function SISCDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              0%
+              {teachers.length > 0 ? Math.round((teachers.filter(t => t.status === 'active').length / teachers.length) * 100) : 0}%
             </div>
             <p className="text-xs text-gray-500 mt-1">Pencerapan selesai</p>
           </CardContent>
