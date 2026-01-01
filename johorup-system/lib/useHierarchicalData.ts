@@ -53,7 +53,17 @@ export function useHierarchicalData(dataType: string): UseHierarchicalDataResult
         })
       });
 
-      const result = await response.json();
+      // Get the raw response text first
+      const responseText = await response.text();
+      console.log('API Response Status:', response.status);
+      console.log('API Response Text:', responseText);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error(`JSON Parse Error: ${parseError.message}. Raw response: ${responseText.substring(0, 200)}...`);
+      }
       
       if (result.status === 'success') {
         setData({ [dataType]: result.data });
@@ -62,6 +72,7 @@ export function useHierarchicalData(dataType: string): UseHierarchicalDataResult
         throw new Error(result.error || 'Failed to fetch data');
       }
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
