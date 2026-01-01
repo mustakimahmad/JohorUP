@@ -52,7 +52,7 @@ exports.handler = async (event, context) => {
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           code VARCHAR(20) UNIQUE NOT NULL,
           name VARCHAR(255) NOT NULL,
-          ppd_id UUID REFERENCES ppd(id),
+          ppd_id UUID,
           address TEXT,
           phone VARCHAR(20),
           email VARCHAR(100),
@@ -63,13 +63,24 @@ exports.handler = async (event, context) => {
         )
       `);
 
+      // Add foreign key constraint for schools after ppd table exists
+      try {
+        await client.query(`
+          ALTER TABLE schools 
+          ADD CONSTRAINT fk_schools_ppd 
+          FOREIGN KEY (ppd_id) REFERENCES ppd(id) ON DELETE SET NULL
+        `);
+      } catch (fkError) {
+        console.log('Schools PPD foreign key constraint already exists:', fkError.message);
+      }
+
       // Create Students table
       await client.query(`
         CREATE TABLE IF NOT EXISTS students (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           ic_number VARCHAR(20) UNIQUE NOT NULL,
           name VARCHAR(255) NOT NULL,
-          school_id UUID REFERENCES schools(id),
+          school_id UUID,
           class_level VARCHAR(10),
           class_name VARCHAR(50),
           gender VARCHAR(10),
@@ -81,6 +92,17 @@ exports.handler = async (event, context) => {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
+
+      // Add foreign key constraint for students after schools table exists
+      try {
+        await client.query(`
+          ALTER TABLE students 
+          ADD CONSTRAINT fk_students_school 
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
+        `);
+      } catch (fkError) {
+        console.log('Students school foreign key constraint already exists:', fkError.message);
+      }
 
       // Add hierarchical fields to users table (without foreign key constraints first)
       await client.query(`
