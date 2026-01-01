@@ -35,6 +35,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/setup-hierarchy"
+  to = "/.netlify/functions/setup-hierarchical-schema"
+  status = 200
+
+[[redirects]]
+  from = "/api/user-hierarchy"
+  to = "/.netlify/functions/get-user-hierarchy"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api-:splat"
   status = 200
