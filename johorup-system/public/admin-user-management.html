@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin User Management - JohorUP</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 30px;
+        }
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        button.danger {
+            background: #e53e3e;
+        }
+        button.danger:hover {
+            background: #c53030;
+        }
+        button.success {
+            background: #38a169;
+        }
+        button.success:hover {
+            background: #2f855a;
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .users-table th,
+        .users-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .users-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .users-table tr:hover {
+            background: #f8f9fa;
+        }
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .super-admin { background: #e53e3e; }
+        .admin { background: #fd7e14; }
+        .tactical { background: #20c997; }
+        .coaching { background: #6f42c1; }
+        .operational { background: #0d6efd; }
+        .strategic { background: #6c757d; }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .loading { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .hierarchy-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 Admin User Management</h1>
+            <p>Manage users and assign organizational hierarchy</p>
+        </div>
+        
+        <div class="content">
+            <!-- Admin Login Section -->
+            <div id="loginSection">
+                <h3>🔐 Admin Authentication</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="adminEmail">Admin Email:</label>
+                        <input type="email" id="adminEmail" value="admin@s4pd.gov.my">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminRole">Admin Role:</label>
+                        <select id="adminRole">
+                            <option value="super_admin_s4pd">Super Admin S4PD</option>
+                            <option value="admin_spb">Admin SPB</option>
+                            <option value="admin_spm">Admin SPM</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="authenticateAdmin()" class="success">Authenticate & Load Users</button>
+            </div>
+
+            <!-- Main Management Interface -->
+            <div id="managementSection" style="display: none;">
+                <div class="tabs">
+                    <div class="tab active" onclick="showTab('users-list')">📋 Users List</div>
+                    <div class="tab" onclick="showTab('create-user')">➕ Create User</div>
+                    <div class="tab" onclick="showTab('hierarchy-assign')">🏢 Assign Hierarchy</div>
+                </div>
+
+                <!-- Users List Tab -->
+                <div id="users-list" class="tab-content active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>👥 All Users</h3>
+                        <button onclick="loadUsers()" class="success">🔄 Refresh</button>
+                    </div>
+                    <div id="usersTableContainer">
+                        <!-- Users table will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Create User Tab -->
+                <div id="create-user" class="tab-content">
+                    <h3>➕ Create New User</h3>
+                    <form id="createUserForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="newUserName">Full Name:</label>
+                                <input type="text" id="newUserName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserEmail">Email:</label>
+                                <input type="email" id="newUserEmail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserPassword">Password:</label>
+                                <input type="password" id="newUserPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserRole">Role:</label>
+                                <select id="newUserRole" onchange="updateRoleFields()" required>
+                                    <option value="">Select Role</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserLevel">Level:</label>
+                                <input type="text" id="newUserLevel" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserSector">Sector:</label>
+                                <input type="text" id="newUserSector" required>
+                            </div>
+                        </div>
+
+                        <div id="hierarchyFields" style="display: none;">
+                            <h4>🏢 Hierarchy Assignment</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="newUserPPD">PPD:</label>
+                                    <select id="newUserPPD" onchange="filterSchoolsByPPD()">
+                                        <option value="">Select PPD</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newUserSchool">School:</label>
+                                    <select id="newUserSchool">
+                                        <option value="">Select School</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newUserSubject">Subject:</label>
+                                    <select id="newUserSubject">
+                                        <option value="">Select Subject</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newUserSpecialization">Specialization:</label>
+                                    <input type="text" id="newUserSpecialization">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="success">✅ Create User</button>
+                    </form>
+                </div>
+
+                <!-- Hierarchy Assignment Tab -->
+                <div id="hierarchy-assign" class="tab-content">
+                    <h3>🏢 Assign Hierarchy to Existing Users</h3>
+                    <div class="form-group">
+                        <label for="selectUserForHierarchy">Select User:</label>
+                        <select id="selectUserForHierarchy" onchange="loadUserHierarchy()">
+                            <option value="">Select User to Assign Hierarchy</option>
+                        </select>
+                    </div>
+                    
+                    <div id="currentHierarchyInfo" class="hierarchy-info" style="display: none;">
+                        <!-- Current hierarchy info will be shown here -->
+                    </div>
+
+                    <div id="hierarchyAssignmentForm" style="display: none;">
+                        <h4>🎯 New Hierarchy Assignment</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="assignPPD">PPD:</label>
+                                <select id="assignPPD" onchange="filterSchoolsForAssignment()">
+                                    <option value="">Select PPD</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="assignSchool">School:</label>
+                                <select id="assignSchool">
+                                    <option value="">Select School</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="assignSubject">Subject:</label>
+                                <select id="assignSubject">
+                                    <option value="">Select Subject</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="assignSpecialization">Specialization:</label>
+                                <input type="text" id="assignSpecialization">
+                            </div>
+                        </div>
+                        <button onclick="assignHierarchy()" class="success">🎯 Assign Hierarchy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h3>✏️ Edit User</h3>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="editUserName">Full Name:</label>
+                        <input type="text" id="editUserName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserEmail">Email:</label>
+                        <input type="email" id="editUserEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserRole">Role:</label>
+                        <select id="editUserRole" required>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserStatus">Status:</label>
+                        <select id="editUserStatus" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="success">💾 Update User</button>
+                <button type="button" onclick="closeEditModal()">❌ Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentAdmin = null;
+        let hierarchyOptions = null;
+        let allUsers = [];
+
+        async function authenticateAdmin() {
+            const email = document.getElementById('adminEmail').value;
+            const role = document.getElementById('adminRole').value;
+
+            if (!email || !role) {
+                showMessage('Please enter admin credentials', 'error');
+                return;
+            }
+
+            currentAdmin = { email, role };
+            
+            // Load hierarchy options and users
+            await loadHierarchyOptions();
+            await loadUsers();
+            
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('managementSection').style.display = 'block';
+            
+            showMessage(`Authenticated as ${role}`, 'success');
+        }
+
+        async function loadHierarchyOptions() {
+            try {
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'get_hierarchy_options',
+                        adminEmail: currentAdmin.email,
+                        adminRole: currentAdmin.role
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    hierarchyOptions = data;
+                    populateDropdowns();
+                }
+            } catch (error) {
+                showMessage('Failed to load hierarchy options: ' + error.message, 'error');
+            }
+        }
+
+        function populateDropdowns() {
+            // Populate role dropdowns
+            const roleSelects = ['newUserRole', 'editUserRole'];
+            roleSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Select Role</option>';
+                hierarchyOptions.roles.forEach(role => {
+                    select.innerHTML += `<option value="${role.value}">${role.label}</option>`;
+                });
+            });
+
+            // Populate PPD dropdowns
+            const ppdSelects = ['newUserPPD', 'assignPPD'];
+            ppdSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Select PPD</option>';
+                hierarchyOptions.ppd.forEach(ppd => {
+                    select.innerHTML += `<option value="${ppd.id}">${ppd.name} (${ppd.district})</option>`;
+                });
+            });
+
+            // Populate subject dropdowns
+            const subjectSelects = ['newUserSubject', 'assignSubject'];
+            subjectSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Select Subject</option>';
+                hierarchyOptions.subjects.forEach(subject => {
+                    select.innerHTML += `<option value="${subject}">${subject}</option>`;
+                });
+            });
+        }
+
+        async function loadUsers() {
+            try {
+                showMessage('Loading users...', 'loading');
+                
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'list_all_users',
+                        adminEmail: currentAdmin.email,
+                        adminRole: currentAdmin.role
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    allUsers = data.users;
+                    displayUsersTable(data.users);
+                    populateUserSelects();
+                    showMessage(`Loaded ${data.total} users`, 'success');
+                } else {
+                    showMessage('Failed to load users: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to load users: ' + error.message, 'error');
+            }
+        }
+
+        function displayUsersTable(users) {
+            const container = document.getElementById('usersTableContainer');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p>No users found.</p>';
+                return;
+            }
+
+            let html = `
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>PPD</th>
+                            <th>School</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            users.forEach(user => {
+                html += `
+                    <tr>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="role-badge ${getRoleClass(user.role)}">${user.role}</span></td>
+                        <td>${user.ppd_name || '-'}</td>
+                        <td>${user.school_name || '-'}</td>
+                        <td>${user.subject || '-'}</td>
+                        <td>${user.status}</td>
+                        <td>
+                            <button onclick="editUser('${user.id}')" style="padding: 5px 10px; font-size: 12px;">✏️ Edit</button>
+                            <button onclick="deleteUser('${user.id}')" class="danger" style="padding: 5px 10px; font-size: 12px;">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function populateUserSelects() {
+            const select = document.getElementById('selectUserForHierarchy');
+            select.innerHTML = '<option value="">Select User to Assign Hierarchy</option>';
+            
+            allUsers.forEach(user => {
+                select.innerHTML += `<option value="${user.id}">${user.name} (${user.email})</option>`;
+            });
+        }
+
+        function getRoleClass(role) {
+            if (role.includes('super_admin')) return 'super-admin';
+            if (role.includes('admin')) return 'admin';
+            if (role.includes('tactical')) return 'tactical';
+            if (role.includes('coaching')) return 'coaching';
+            if (role.includes('operational')) return 'operational';
+            if (role.includes('strategic')) return 'strategic';
+            return 'operational';
+        }
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function updateRoleFields() {
+            const role = document.getElementById('newUserRole').value;
+            const levelField = document.getElementById('newUserLevel');
+            const hierarchyFields = document.getElementById('hierarchyFields');
+            
+            const roleData = hierarchyOptions.roles.find(r => r.value === role);
+            if (roleData) {
+                levelField.value = roleData.level;
+                
+                // Show hierarchy fields for roles that need them
+                if (['tactical_ppd', 'coaching_sisc', 'operational_school', 'operational_teacher'].includes(role)) {
+                    hierarchyFields.style.display = 'block';
+                } else {
+                    hierarchyFields.style.display = 'none';
+                }
+            }
+        }
+
+        function filterSchoolsByPPD() {
+            const ppdId = document.getElementById('newUserPPD').value;
+            const schoolSelect = document.getElementById('newUserSchool');
+            
+            schoolSelect.innerHTML = '<option value="">Select School</option>';
+            
+            if (ppdId) {
+                const filteredSchools = hierarchyOptions.schools.filter(school => school.ppd_id === ppdId);
+                filteredSchools.forEach(school => {
+                    schoolSelect.innerHTML += `<option value="${school.id}">${school.name}</option>`;
+                });
+            }
+        }
+
+        function filterSchoolsForAssignment() {
+            const ppdId = document.getElementById('assignPPD').value;
+            const schoolSelect = document.getElementById('assignSchool');
+            
+            schoolSelect.innerHTML = '<option value="">Select School</option>';
+            
+            if (ppdId) {
+                const filteredSchools = hierarchyOptions.schools.filter(school => school.ppd_id === ppdId);
+                filteredSchools.forEach(school => {
+                    schoolSelect.innerHTML += `<option value="${school.id}">${school.name}</option>`;
+                });
+            }
+        }
+
+        // Create User Form Handler
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userData = {
+                name: document.getElementById('newUserName').value,
+                email: document.getElementById('newUserEmail').value,
+                password: document.getElementById('newUserPassword').value,
+                role: document.getElementById('newUserRole').value,
+                level: document.getElementById('newUserLevel').value,
+                sector: document.getElementById('newUserSector').value,
+                ppd_id: document.getElementById('newUserPPD').value || null,
+                school_id: document.getElementById('newUserSchool').value || null,
+                subject: document.getElementById('newUserSubject').value || null,
+                specialization: document.getElementById('newUserSpecialization').value || null
+            };
+
+            try {
+                showMessage('Creating user...', 'loading');
+                
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create_user',
+                        adminEmail: currentAdmin.email,
+                        adminRole: currentAdmin.role,
+                        userData: userData
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showMessage('User created successfully!', 'success');
+                    document.getElementById('createUserForm').reset();
+                    await loadUsers(); // Refresh users list
+                } else {
+                    showMessage('Failed to create user: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to create user: ' + error.message, 'error');
+            }
+        });
+
+        function loadUserHierarchy() {
+            const userId = document.getElementById('selectUserForHierarchy').value;
+            const currentInfo = document.getElementById('currentHierarchyInfo');
+            const assignmentForm = document.getElementById('hierarchyAssignmentForm');
+            
+            if (!userId) {
+                currentInfo.style.display = 'none';
+                assignmentForm.style.display = 'none';
+                return;
+            }
+
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                currentInfo.innerHTML = `
+                    <h4>📋 Current Hierarchy for ${user.name}</h4>
+                    <p><strong>PPD:</strong> ${user.ppd_name || 'Not assigned'}</p>
+                    <p><strong>School:</strong> ${user.school_name || 'Not assigned'}</p>
+                    <p><strong>Subject:</strong> ${user.subject || 'Not assigned'}</p>
+                    <p><strong>Specialization:</strong> ${user.specialization || 'Not assigned'}</p>
+                `;
+                currentInfo.style.display = 'block';
+                assignmentForm.style.display = 'block';
+            }
+        }
+
+        async function assignHierarchy() {
+            const userId = document.getElementById('selectUserForHierarchy').value;
+            const hierarchyData = {
+                ppd_id: document.getElementById('assignPPD').value || null,
+                school_id: document.getElementById('assignSchool').value || null,
+                subject: document.getElementById('assignSubject').value || null,
+                specialization: document.getElementById('assignSpecialization').value || null
+            };
+
+            try {
+                showMessage('Assigning hierarchy...', 'loading');
+                
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'assign_hierarchy',
+                        adminEmail: currentAdmin.email,
+                        adminRole: currentAdmin.role,
+                        userIdToAssign: userId,
+                        hierarchyData: hierarchyData
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showMessage('Hierarchy assigned successfully!', 'success');
+                    await loadUsers(); // Refresh users list
+                    loadUserHierarchy(); // Refresh current user info
+                } else {
+                    showMessage('Failed to assign hierarchy: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to assign hierarchy: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Are you sure you want to delete this user?')) {
+                return;
+            }
+
+            try {
+                showMessage('Deleting user...', 'loading');
+                
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete_user',
+                        adminEmail: currentAdmin.email,
+                        adminRole: currentAdmin.role,
+                        userIdToDelete: userId
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showMessage('User deleted successfully!', 'success');
+                    await loadUsers(); // Refresh users list
+                } else {
+                    showMessage('Failed to delete user: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to delete user: ' + error.message, 'error');
+            }
+        }
+
+        function editUser(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (user) {
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editUserName').value = user.name;
+                document.getElementById('editUserEmail').value = user.email;
+                document.getElementById('editUserRole').value = user.role;
+                document.getElementById('editUserStatus').value = user.status;
+                
+                document.getElementById('editUserModal').style.display = 'block';
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        // Edit User Form Handler
+        document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('editUserId').value;
+            const updateData = {
+                name: document.getElementById('editUserName').value,
+                email: document.getElementById('editUserEmail').value,
+                role: document.getElementById('editUserRole').value,
+                status: document.getElementById('editUserStatus').value
+            };
+
+            try {
+                showMessage('Updating user...', 'loading');
+                
+                const response = await fetch('/api/admin-users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update_user',
+                        adminEmail: currentAdmin.email,
+                        adminRole: currentAdmin.role,
+                        userId: userId,
+                        updateData: updateData
+                    })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showMessage('User updated successfully!', 'success');
+                    closeEditModal();
+                    await loadUsers(); // Refresh users list
+                } else {
+                    showMessage('Failed to update user: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to update user: ' + error.message, 'error');
+            }
+        });
+
+        function showMessage(message, type) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    resultsDiv.innerHTML = '';
+                }, 3000);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('editUserModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

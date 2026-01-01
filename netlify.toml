@@ -45,6 +45,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/admin-users"
+  to = "/.netlify/functions/admin-user-management"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api-:splat"
   status = 200
