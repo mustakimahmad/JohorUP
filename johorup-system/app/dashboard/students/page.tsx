@@ -115,27 +115,145 @@ export default function StudentsPage() {
   }
 
   if (error) {
+    // Fallback mode with sample data for demonstration
+    const fallbackStudents = [
+      {
+        id: 1,
+        name: "Ahmad Bin Ali",
+        ic_number: "051234567890",
+        class_level: "Tingkatan 4",
+        class_name: "4 Bestari",
+        school_name: "SMK Taman Johor Jaya",
+        ppd_name: "PPD Johor Bahru",
+        district: "Johor Bahru"
+      },
+      {
+        id: 2,
+        name: "Siti Nurhaliza Binti Hassan",
+        ic_number: "051234567891",
+        class_level: "Tingkatan 4",
+        class_name: "4 Cemerlang",
+        school_name: "SMK Bandar Baru Uda",
+        ppd_name: "PPD Johor Bahru",
+        district: "Johor Bahru"
+      },
+      {
+        id: 3,
+        name: "Raj Kumar A/L Subramaniam",
+        ic_number: "051234567892",
+        class_level: "Tingkatan 4",
+        class_name: "4 Bijak",
+        school_name: "SMK Taman Sentosa",
+        ppd_name: "PPD Johor Bahru",
+        district: "Johor Bahru"
+      }
+    ];
+
+    const fallbackUser = {
+      name: "Demo User",
+      role: "operational_teacher",
+      school_name: "SMK Demo",
+      subject: "Bahasa Melayu"
+    };
+
     return (
-      <div className="p-6">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <h2 className="text-xl font-bold mb-2">Error loading data</h2>
-            <p className="text-sm">{error}</p>
-          </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-            <h3 className="font-semibold text-yellow-800 mb-2">Debugging Information</h3>
-            <p className="text-sm text-yellow-700">
-              This error occurs when the hierarchical data API is not responding correctly. 
-              Please check the browser console for more details or contact the system administrator.
-            </p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-            >
-              Retry
-            </button>
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="border-b border-gray-200 pb-4">
+          <h1 className="text-3xl font-bold text-gray-900">Murid (Demo Mode)</h1>
+          <p className="text-gray-600 mt-1">Sistem sedang dalam mod demo kerana API tidak dapat diakses</p>
+        </div>
+
+        {/* Error Notice */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-800 mb-2">API Connection Error</h3>
+              <p className="text-sm text-red-700 mb-3">
+                {error}
+              </p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                  Retry Connection
+                </button>
+                <button 
+                  onClick={() => console.log('Debug info:', { error, timestamp: new Date().toISOString() })} 
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                >
+                  Log Debug Info
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Demo Data Display */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-gray-800">
+              Demo Data - Senarai Murid
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Nota:</strong> Data di bawah adalah contoh sahaja. Sistem sedang menggunakan mod demo kerana API tidak dapat diakses.
+              </p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Nama Murid</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">No. IC</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Kelas</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Sekolah</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">PPD</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fallbackStudents.map((student) => (
+                    <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-gray-900">{student.name}</div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-700">{student.ic_number}</td>
+                      <td className="py-3 px-4 text-gray-700">{student.class_level} {student.class_name}</td>
+                      <td className="py-3 px-4 text-gray-700">{student.school_name}</td>
+                      <td className="py-3 px-4 text-gray-700">{student.ppd_name}</td>
+                      <td className="py-3 px-4">
+                        <span className="inline-block px-2 py-1 text-xs rounded-full font-medium bg-yellow-100 text-yellow-800">
+                          Demo Mode
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Instructions */}
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardContent className="p-4">
+            <h4 className="font-medium text-yellow-900 mb-2">Panduan Penyelesaian Masalah</h4>
+            <ul className="text-sm text-yellow-800 space-y-1">
+              <li>• Sistem sedang dalam mod demo kerana API tidak dapat diakses</li>
+              <li>• Sila hubungi pentadbir sistem untuk menyelesaikan masalah sambungan API</li>
+              <li>• Klik "Retry Connection" untuk cuba sambung semula</li>
+              <li>• Klik "Log Debug Info" untuk melihat maklumat debug di console browser</li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     );
   }
