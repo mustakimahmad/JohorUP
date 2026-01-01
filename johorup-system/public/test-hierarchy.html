@@ -147,15 +147,12 @@
             resultsDiv.innerHTML = '<div class="status loading">🔄 Testing user hierarchy access...</div>';
             
             try {
-                // First get user ID by email (simulate login)
-                const userId = await getUserIdByEmail(email);
-                
                 const response = await fetch('/api/user-hierarchy', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ userId, userRole: role })
+                    body: JSON.stringify({ userEmail: email, userRole: role })
                 });
                 
                 const data = await response.json();
@@ -182,18 +179,6 @@
                     </div>
                 `;
             }
-        }
-        
-        async function getUserIdByEmail(email) {
-            // Simulate getting user ID - in real app this would come from login session
-            const userIds = {
-                'admin@s4pd.gov.my': 'admin-id',
-                'ppd.jb@jpnj.gov.my': 'ppd-id',
-                'sisc.math@jpnj.gov.my': 'sisc-id',
-                'school.demo@jpnj.gov.my': 'school-id',
-                'teacher.math@jpnj.gov.my': 'teacher-id'
-            };
-            return userIds[email] || 'unknown-id';
         }
         
         function renderHierarchyData(data, permissions, role) {

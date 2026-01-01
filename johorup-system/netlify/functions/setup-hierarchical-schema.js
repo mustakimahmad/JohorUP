@@ -82,11 +82,11 @@ exports.handler = async (event, context) => {
         )
       `);
 
-      // Add hierarchical fields to users table
+      // Add hierarchical fields to users table (without foreign key constraints first)
       await client.query(`
         ALTER TABLE users 
-        ADD COLUMN IF NOT EXISTS ppd_id UUID REFERENCES ppd(id),
-        ADD COLUMN IF NOT EXISTS school_id UUID REFERENCES schools(id),
+        ADD COLUMN IF NOT EXISTS ppd_id UUID,
+        ADD COLUMN IF NOT EXISTS school_id UUID,
         ADD COLUMN IF NOT EXISTS subject VARCHAR(100),
         ADD COLUMN IF NOT EXISTS specialization VARCHAR(100)
       `);
@@ -188,6 +188,27 @@ exports.handler = async (event, context) => {
         if (updateValues.length > 1) {
           await client.query(updateQuery, updateValues);
         }
+      }
+
+      // Add foreign key constraints after data is inserted
+      try {
+        await client.query(`
+          ALTER TABLE users 
+          ADD CONSTRAINT fk_users_ppd 
+          FOREIGN KEY (ppd_id) REFERENCES ppd(id) ON DELETE SET NULL
+        `);
+      } catch (fkError) {
+        console.log('PPD foreign key constraint already exists or failed:', fkError.message);
+      }
+
+      try {
+        await client.query(`
+          ALTER TABLE users 
+          ADD CONSTRAINT fk_users_school 
+          FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
+        `);
+      } catch (fkError) {
+        console.log('School foreign key constraint already exists or failed:', fkError.message);
       }
 
       // Insert sample students data

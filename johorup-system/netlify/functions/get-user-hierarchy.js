@@ -12,15 +12,15 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { userId, userRole } = JSON.parse(event.body || '{}');
+    const { userEmail, userRole } = JSON.parse(event.body || '{}');
 
-    if (!userId || !userRole) {
+    if (!userEmail || !userRole) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
           status: 'error',
-          error: 'User ID and role required'
+          error: 'User email and role required'
         })
       };
     }
@@ -49,14 +49,14 @@ exports.handler = async (event, context) => {
     try {
       let hierarchyData = {};
 
-      // Get user details
+      // Get user details by email
       const userResult = await client.query(
         `SELECT u.*, p.name as ppd_name, s.name as school_name 
          FROM users u
          LEFT JOIN ppd p ON u.ppd_id = p.id
          LEFT JOIN schools s ON u.school_id = s.id
-         WHERE u.id = $1`,
-        [userId]
+         WHERE u.email = $1`,
+        [userEmail]
       );
 
       if (userResult.rows.length === 0) {
