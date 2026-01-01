@@ -38,7 +38,31 @@ export function useHierarchicalData(dataType: string): UseHierarchicalDataResult
       // Get current user from session
       const userSession = sessionStorage.getItem('currentUser');
       if (!userSession) {
-        throw new Error('User not logged in');
+        // Check if we're in a development/demo environment
+        const isDemoMode = window.location.hostname === 'localhost' || window.location.hostname.includes('netlify');
+        
+        if (isDemoMode) {
+          // Provide demo user data for testing
+          const demoUser = {
+            email: 'demo@johorup.gov.my',
+            role: 'operational_teacher',
+            name: 'Demo User',
+            school_name: 'SMK Demo',
+            ppd_name: 'PPD Demo',
+            subject: 'Bahasa Melayu'
+          };
+          
+          // Store demo user in session for consistency
+          sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+          
+          // Set demo data based on dataType
+          const demoData = getDemoData(dataType);
+          setData({ [dataType]: demoData });
+          setUser(demoUser);
+          return;
+        } else {
+          throw new Error('User not logged in. Please login first.');
+        }
       }
 
       const currentUser = JSON.parse(userSession);
@@ -78,6 +102,88 @@ export function useHierarchicalData(dataType: string): UseHierarchicalDataResult
       setLoading(false);
     }
   };
+
+// Demo data generator function
+function getDemoData(dataType: string) {
+  switch (dataType) {
+    case 'students':
+      return [
+        {
+          id: 1,
+          name: "Ahmad Bin Ali",
+          ic_number: "051234567890",
+          class_level: "Tingkatan 4",
+          class_name: "4 Bestari",
+          school_name: "SMK Taman Johor Jaya",
+          ppd_name: "PPD Johor Bahru",
+          district: "Johor Bahru"
+        },
+        {
+          id: 2,
+          name: "Siti Nurhaliza Binti Hassan",
+          ic_number: "051234567891",
+          class_level: "Tingkatan 4",
+          class_name: "4 Cemerlang",
+          school_name: "SMK Bandar Baru Uda",
+          ppd_name: "PPD Johor Bahru",
+          district: "Johor Bahru"
+        },
+        {
+          id: 3,
+          name: "Raj Kumar A/L Subramaniam",
+          ic_number: "051234567892",
+          class_level: "Tingkatan 4",
+          class_name: "4 Bijak",
+          school_name: "SMK Taman Sentosa",
+          ppd_name: "PPD Johor Bahru",
+          district: "Johor Bahru"
+        }
+      ];
+    case 'teachers':
+      return [
+        {
+          id: 1,
+          name: "Cikgu Aminah",
+          subject: "Bahasa Melayu",
+          school_name: "SMK Taman Johor Jaya",
+          ppd_name: "PPD Johor Bahru"
+        },
+        {
+          id: 2,
+          name: "Cikgu Rahman",
+          subject: "Matematik",
+          school_name: "SMK Bandar Baru Uda",
+          ppd_name: "PPD Johor Bahru"
+        }
+      ];
+    case 'schools':
+      return [
+        {
+          id: 1,
+          name: "SMK Taman Johor Jaya",
+          ppd_name: "PPD Johor Bahru",
+          student_count: 450,
+          teacher_count: 35
+        },
+        {
+          id: 2,
+          name: "SMK Bandar Baru Uda",
+          ppd_name: "PPD Johor Bahru",
+          student_count: 380,
+          teacher_count: 28
+        }
+      ];
+    case 'dashboard_stats':
+      return {
+        total_students: 830,
+        total_teachers: 63,
+        total_schools: 2,
+        total_ppd: 1
+      };
+    default:
+      return [];
+  }
+}
 
   useEffect(() => {
     fetchData();

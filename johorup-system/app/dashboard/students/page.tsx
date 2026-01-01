@@ -114,7 +114,83 @@ export default function StudentsPage() {
     );
   }
 
-  if (error) {
+  if (error && error.includes('User not logged in')) {
+    return (
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="border-b border-gray-200 pb-4">
+          <h1 className="text-3xl font-bold text-gray-900">Murid</h1>
+          <p className="text-gray-600 mt-1">Sila log masuk untuk mengakses data murid</p>
+        </div>
+
+        {/* Login Required Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Log Masuk Diperlukan</h3>
+          <p className="text-blue-800 mb-4">
+            Anda perlu log masuk untuk mengakses data murid. Sila log masuk dengan akaun yang sah.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button 
+              onClick={() => window.location.href = '/login'} 
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Pergi ke Halaman Log Masuk
+            </button>
+            <button 
+              onClick={() => {
+                // Create a demo session for testing
+                const demoUser = {
+                  email: 'demo@johorup.gov.my',
+                  role: 'operational_teacher',
+                  name: 'Demo User',
+                  school_name: 'SMK Demo',
+                  ppd_name: 'PPD Demo',
+                  subject: 'Bahasa Melayu'
+                };
+                sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+                window.location.reload();
+              }} 
+              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Gunakan Demo Mode
+            </button>
+          </div>
+        </div>
+
+        {/* Demo Users List */}
+        <Card className="bg-gray-50 border-gray-200">
+          <CardContent className="p-4">
+            <h4 className="font-medium text-gray-900 mb-3">Demo Users untuk Testing</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="bg-white p-3 rounded border">
+                <strong>Super Admin:</strong> admin@s4pd.gov.my / admin123
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <strong>Admin SPB:</strong> admin@spb.gov.my / admin123
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <strong>PPD User:</strong> ppd@kluang.gov.my / ppd123
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <strong>SISC+:</strong> sisc@bahasamelayu.gov.my / sisc123
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <strong>School Admin:</strong> admin@smktjj.edu.my / school123
+              </div>
+              <div className="bg-white p-3 rounded border">
+                <strong>Teacher:</strong> teacher@bahasamelayu.edu.my / teacher123
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
     // Fallback mode with sample data for demonstration
     const fallbackStudents = [
       {
