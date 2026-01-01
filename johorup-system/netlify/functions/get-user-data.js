@@ -12,9 +12,14 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    console.log('Get user data function called');
+    console.log('Event body:', event.body);
+    
     const { userEmail, userRole, dataType } = JSON.parse(event.body || '{}');
+    console.log('Parsed params:', { userEmail, userRole, dataType });
 
     if (!userEmail || !userRole || !dataType) {
+      console.log('Missing required parameters');
       return {
         statusCode: 400,
         headers,
@@ -26,8 +31,10 @@ exports.handler = async (event, context) => {
     }
 
     const databaseUrl = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
+    console.log('Database URL exists:', !!databaseUrl);
     
     if (!databaseUrl) {
+      console.log('Database not configured');
       return {
         statusCode: 500,
         headers,
@@ -45,6 +52,7 @@ exports.handler = async (event, context) => {
     });
 
     const client = await pool.connect();
+    console.log('Database connected successfully');
 
     try {
       // Get user details first
@@ -105,6 +113,7 @@ exports.handler = async (event, context) => {
       };
 
     } catch (dbError) {
+      console.error('Database error:', dbError);
       client.release();
       await pool.end();
       throw dbError;
@@ -119,7 +128,8 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         status: 'error',
         error: error.message,
-        message: 'Failed to get user data'
+        message: 'Failed to get user data',
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       })
     };
   }
