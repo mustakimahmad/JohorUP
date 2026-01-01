@@ -48,7 +48,9 @@ export default function SchoolDashboardPage() {
 
   // Get school data
   const school = user.school_name ? { name: user.school_name } : null;
-  const schoolReports = mockProgramReports.filter(r => r.school_id === user.school_id);
+  
+  // For now, use empty arrays since we're transitioning from mock data to real hierarchical data
+  const schoolReports: any[] = [];
   
   // Calculate statistics
   const totalReports = schoolReports.length;
