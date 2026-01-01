@@ -355,8 +355,16 @@
                     </div>
                     <div class="form-group">
                         <label for="editUserRole">Role:</label>
-                        <select id="editUserRole" required>
+                        <select id="editUserRole" onchange="updateEditRoleFields()" required>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserLevel">Level:</label>
+                        <input type="text" id="editUserLevel" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserSector">Sector:</label>
+                        <input type="text" id="editUserSector" required>
                     </div>
                     <div class="form-group">
                         <label for="editUserStatus">Status:</label>
@@ -564,6 +572,31 @@
             event.target.classList.add('active');
         }
 
+        function updateEditRoleFields() {
+            const role = document.getElementById('editUserRole').value;
+            const levelField = document.getElementById('editUserLevel');
+            const sectorField = document.getElementById('editUserSector');
+            
+            const roleData = hierarchyOptions.roles.find(r => r.value === role);
+            if (roleData) {
+                levelField.value = roleData.level;
+                
+                // Auto-populate sector based on role
+                const sectorMapping = {
+                    'super_admin_s4pd': 'S4PD',
+                    'admin_spb': 'SPB',
+                    'admin_spm': 'SPM',
+                    'strategic_jcorp': 'JCORP',
+                    'strategic_hasanah': 'HASANAH',
+                    'tactical_ppd': 'PPD',
+                    'coaching_sisc': 'SISC',
+                    'operational_school': 'SCHOOL',
+                    'operational_teacher': 'TEACHER'
+                };
+                sectorField.value = sectorMapping[role] || 'GENERAL';
+            }
+        }
+
         function updateRoleFields() {
             const role = document.getElementById('newUserRole').value;
             const levelField = document.getElementById('newUserLevel');
@@ -754,6 +787,8 @@
                 document.getElementById('editUserName').value = user.name;
                 document.getElementById('editUserEmail').value = user.email;
                 document.getElementById('editUserRole').value = user.role;
+                document.getElementById('editUserLevel').value = user.level;
+                document.getElementById('editUserSector').value = user.sector;
                 document.getElementById('editUserStatus').value = user.status;
                 
                 document.getElementById('editUserModal').style.display = 'block';
@@ -773,6 +808,8 @@
                 name: document.getElementById('editUserName').value,
                 email: document.getElementById('editUserEmail').value,
                 role: document.getElementById('editUserRole').value,
+                level: document.getElementById('editUserLevel').value,
+                sector: document.getElementById('editUserSector').value,
                 status: document.getElementById('editUserStatus').value
             };
 

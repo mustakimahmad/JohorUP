@@ -223,6 +223,40 @@ async function createUser(client, headers, userData, adminEmail) {
 async function updateUser(client, headers, userId, updateData, adminEmail) {
   const { name, email, role, level, sector, ppd_id, school_id, subject, specialization, status } = updateData;
 
+  // Get role data to auto-populate level if not provided
+  let finalLevel = level;
+  let finalSector = sector;
+  
+  if (!finalLevel && role) {
+    const roleMapping = {
+      'super_admin_s4pd': 'Super Admin',
+      'admin_spb': 'Admin',
+      'admin_spm': 'Admin',
+      'strategic_jcorp': 'Strategic Viewer',
+      'strategic_hasanah': 'Strategic Viewer',
+      'tactical_ppd': 'Tactical User',
+      'coaching_sisc': 'Coaching User',
+      'operational_school': 'Operational User',
+      'operational_teacher': 'Operational User'
+    };
+    finalLevel = roleMapping[role] || 'User';
+  }
+  
+  if (!finalSector && role) {
+    const sectorMapping = {
+      'super_admin_s4pd': 'S4PD',
+      'admin_spb': 'SPB',
+      'admin_spm': 'SPM',
+      'strategic_jcorp': 'JCORP',
+      'strategic_hasanah': 'HASANAH',
+      'tactical_ppd': 'PPD',
+      'coaching_sisc': 'SISC',
+      'operational_school': 'SCHOOL',
+      'operational_teacher': 'TEACHER'
+    };
+    finalSector = sectorMapping[role] || 'GENERAL';
+  }
+
   const result = await client.query(`
     UPDATE users 
     SET name = $1, email = $2, role = $3, level = $4, sector = $5, 
@@ -230,7 +264,7 @@ async function updateUser(client, headers, userId, updateData, adminEmail) {
         updated_at = CURRENT_TIMESTAMP
     WHERE id = $11
     RETURNING id, name, email, role, level, sector, status
-  `, [name, email, role, level, sector, ppd_id || null, school_id || null, subject || null, specialization || null, status, userId]);
+  `, [name, email, role, finalLevel, finalSector, ppd_id || null, school_id || null, subject || null, specialization || null, status, userId]);
 
   if (result.rows.length === 0) {
     client.release();
