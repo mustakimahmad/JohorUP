@@ -108,8 +108,9 @@
             const result = await testAPI('/api/get-user-data', {
                 method: 'POST',
                 body: { 
-                    email: 'admin@s4pd.gov.my',
-                    data_type: 'students'
+                    userEmail: 'admin@s4pd.gov.my',
+                    userRole: 'super_admin_s4pd',
+                    dataType: 'students'
                 }
             });
             displayResult('user-data-result', result);
