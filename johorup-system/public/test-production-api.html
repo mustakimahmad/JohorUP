@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Production API Test - JohorUP System</h1>
+    <p>Testing API functions on production environment</p>
+
+    <div class="test-section">
+        <h3>1. Simple API Test</h3>
+        <button onclick="testSimpleAPI()">Test Simple API</button>
+        <div id="simple-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Database Connection Test</h3>
+        <button onclick="testDatabaseAPI()">Test Database Connection</button>
+        <div id="db-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. User Data API Test</h3>
+        <button onclick="testUserDataAPI()">Test User Data API</button>
+        <div id="user-data-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Login API Test</h3>
+        <button onclick="testLoginAPI()">Test Login API</button>
+        <div id="login-result"></div>
+    </div>
+
+    <script>
+        async function testAPI(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    method: options.method || 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    body: options.body ? JSON.stringify(options.body) : undefined
+                });
+
+                const responseText = await response.text();
+                let result;
+                
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    result = { error: 'Invalid JSON response', raw: responseText.substring(0, 500) };
+                }
+
+                return {
+                    status: response.status,
+                    ok: response.ok,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    ok: false,
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        function displayResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            const className = result.ok ? 'success' : 'error';
+            
+            element.innerHTML = `
+                <div class="${className}">
+                    <strong>Status:</strong> ${result.status} ${result.ok ? '✓' : '✗'}<br>
+                    <strong>Response:</strong>
+                    <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        async function testSimpleAPI() {
+            document.getElementById('simple-result').innerHTML = '<div class="loading">Testing...</div>';
+            const result = await testAPI('/api/test-simple');
+            displayResult('simple-result', result);
+        }
+
+        async function testDatabaseAPI() {
+            document.getElementById('db-result').innerHTML = '<div class="loading">Testing...</div>';
+            const result = await testAPI('/api/test-db');
+            displayResult('db-result', result);
+        }
+
+        async function testUserDataAPI() {
+            document.getElementById('user-data-result').innerHTML = '<div class="loading">Testing...</div>';
+            const result = await testAPI('/api/get-user-data', {
+                method: 'POST',
+                body: { 
+                    email: 'admin@s4pd.gov.my',
+                    data_type: 'students'
+                }
+            });
+            displayResult('user-data-result', result);
+        }
+
+        async function testLoginAPI() {
+            document.getElementById('login-result').innerHTML = '<div class="loading">Testing...</div>';
+            const result = await testAPI('/api/auth/login', {
+                method: 'POST',
+                body: { 
+                    email: 'admin@s4pd.gov.my',
+                    password: 'admin123'
+                }
+            });
+            displayResult('login-result', result);
+        }
+
+        // Auto-run simple test on page load
+        window.onload = function() {
+            testSimpleAPI();
+        };
+    </script>
+</body>
+</html>
