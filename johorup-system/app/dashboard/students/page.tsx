@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStudentsData, getUserPermissions, getRoleDisplayName, getScopeDescription } from '@/lib/useHierarchicalData';
 import { 
@@ -191,6 +191,8 @@ export default function StudentsPage() {
       </div>
     );
   }
+
+  if (error) {
     // Fallback mode with sample data for demonstration
     const fallbackStudents = [
       {
@@ -224,13 +226,6 @@ export default function StudentsPage() {
         district: "Johor Bahru"
       }
     ];
-
-    const fallbackUser = {
-      name: "Demo User",
-      role: "operational_teacher",
-      school_name: "SMK Demo",
-      subject: "Bahasa Melayu"
-    };
 
     return (
       <div className="p-6 space-y-6">

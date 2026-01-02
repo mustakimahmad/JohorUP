@@ -86,7 +86,8 @@ export function useHierarchicalData(dataType: string): UseHierarchicalDataResult
       try {
         result = JSON.parse(responseText);
       } catch (parseError) {
-        throw new Error(`JSON Parse Error: ${parseError.message}. Raw response: ${responseText.substring(0, 200)}...`);
+        const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown parse error';
+        throw new Error(`JSON Parse Error: ${errorMessage}. Raw response: ${responseText.substring(0, 200)}...`);
       }
       
       if (result.status === 'success') {
