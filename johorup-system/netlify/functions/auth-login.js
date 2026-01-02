@@ -114,15 +114,33 @@ exports.handler = async (event, context) => {
       );
 
       if (result.rows.length === 0) {
-      // Log failed login attempt
-      await client.query(
-        `INSERT INTO audit_logs (user_id, action, resource, details, ip_address) 
-         VALUES (NULL, 'LOGIN_FAILED', 'AUTH', $1, $2)`,
-        [
-          JSON.stringify({ email, reason: 'Invalid credentials' }),
-          getClientIP(event)
-        ]
-      );
+        // Log failed login attempt
+        try {
+          await client.query(
+            `INSERT INTO login_attempts (email, ip_address, user_agent, success, failure_reason) 
+             VALUES ($1, $2, $3, $4, $5)`,
+            [email, getClientIP(event), event.headers['user-agent'] || 'unknown', false, 'Invalid credentials']
+          );
+
+          await client.query(
+            `INSERT INTO audit_logs (user_email, user_name, user_role, action, table_name, new_values, ip_address, user_agent, status, error_message) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            [
+              email,
+              'Unknown User',
+              'unknown',
+              'LOGIN_FAILED',
+              'users',
+              JSON.stringify({ email, attempt_time: new Date().toISOString() }),
+              getClientIP(event),
+              event.headers['user-agent'] || 'unknown',
+              'FAILED',
+              'Invalid email or password'
+            ]
+          );
+        } catch (auditError) {
+          console.log('Audit logging error:', auditError.message);
+        }
 
         return {
           statusCode: 401,
@@ -136,17 +154,42 @@ exports.handler = async (event, context) => {
 
       const user = result.rows[0];
 
-      // Log successful login
-      await client.query(
-        `INSERT INTO audit_logs (user_id, action, resource, details, ip_address, user_agent) 
-         VALUES ($1, 'LOGIN_SUCCESS', 'AUTH', $2, $3, $4)`,
-        [
-          user.id,
-          JSON.stringify({ email: user.email, role: user.role }),
-          getClientIP(event),
-          event.headers['user-agent'] || 'unknown'
-        ]
-      );
+      // Log successful login attempt
+      try {
+        await client.query(
+          `INSERT INTO login_attempts (email, ip_address, user_agent, success) 
+           VALUES ($1, $2, $3, $4)`,
+          [email, getClientIP(event), event.headers['user-agent'] || 'unknown', true]
+        );
+
+        await client.query(
+          `INSERT INTO audit_logs (user_email, user_name, user_role, action, table_name, record_id, new_values, ip_address, user_agent, status, additional_info) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          [
+            user.email,
+            user.name,
+            user.role,
+            'LOGIN_SUCCESS',
+            'users',
+            user.id,
+            JSON.stringify({ 
+              email: user.email, 
+              role: user.role, 
+              login_time: new Date().toISOString() 
+            }),
+            getClientIP(event),
+            event.headers['user-agent'] || 'unknown',
+            'SUCCESS',
+            JSON.stringify({ 
+              session_start: new Date().toISOString(),
+              user_level: user.level,
+              user_sector: user.sector
+            })
+          ]
+        );
+      } catch (auditError) {
+        console.log('Audit logging error:', auditError.message);
+      }
 
       client.release();
       await pool.end();

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audit Trail - JohorUP</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 2px solid #ddd; border-radius: 5px; }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .loading { border-color: #ffc107; background: #fff3cd; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+        .stat-label { font-size: 14px; color: #666; }
+        .filter-section { background: #e9ecef; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .filter-section input, .filter-section select { margin: 5px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test Audit Trail System - JohorUP</h1>
+        <p>Menguji sistem audit trail dan monitoring aktiviti pengguna</p>
+
+        <!-- Setup Section -->
+        <div class="test-section">
+            <h3>1. Setup Audit Trail System</h3>
+            <button onclick="setupAuditTrail()" class="success">Setup Audit Trail</button>
+            <button onclick="initDatabase()">Initialize Database</button>
+            <div id="setup-result"></div>
+        </div>
+
+        <!-- Test Login Section -->
+        <div class="test-section">
+            <h3>2. Test Login Audit</h3>
+            <button onclick="testSuccessfulLogin()" class="success">Test Successful Login</button>
+            <button onclick="testFailedLogin()" class="danger">Test Failed Login</button>
+            <div id="login-result"></div>
+        </div>
+
+        <!-- View Audit Logs Section -->
+        <div class="test-section">
+            <h3>3. View Audit Logs</h3>
+            
+            <div class="filter-section">
+                <h4>Filter Options:</h4>
+                <input type="text" id="userEmailFilter" placeholder="User Email" />
+                <select id="actionFilter">
+                    <option value="">All Actions</option>
+                    <option value="LOGIN_SUCCESS">Login Success</option>
+                    <option value="LOGIN_FAILED">Login Failed</option>
+                    <option value="CREATE">Create</option>
+                    <option value="UPDATE">Update</option>
+                    <option value="DELETE">Delete</option>
+                </select>
+                <input type="date" id="dateFromFilter" />
+                <input type="date" id="dateToFilter" />
+                <button onclick="loadAuditLogs()">Load Audit Logs</button>
+                <button onclick="clearFilters()">Clear Filters</button>
+            </div>
+
+            <div id="audit-stats"></div>
+            <div id="audit-result"></div>
+        </div>
+
+        <!-- System Events Section -->
+        <div class="test-section">
+            <h3>4. System Events & Login Attempts</h3>
+            <div id="system-events"></div>
+        </div>
+    </div>
+
+    <script>
+        async function callAPI(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    method: options.method || 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    body: options.body ? JSON.stringify(options.body) : undefined
+                });
+
+                const text = await response.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { error: 'Response bukan JSON', raw: text.substring(0, 200) };
+                }
+
+                return {
+                    status: response.status,
+                    ok: response.ok,
+                    data: data
+                };
+            } catch (error) {
+                return {
+                    status: 0,
+                    ok: false,
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        function showResult(elementId, result, title = '') {
+            const element = document.getElementById(elementId);
+            const className = result.ok ? 'success' : 'error';
+            
+            element.innerHTML = `
+                <div class="status ${result.ok ? 'text-success' : 'text-danger'}">
+                    ${title} - Status: ${result.status} ${result.ok ? '✅' : '❌'}
+                </div>
+                <pre>${JSON.stringify(result.data, null, 2)}</pre>
+            `;
+            
+            const section = element.closest('.test-section');
+            section.className = `test-section ${className}`;
+        }
+
+        async function setupAuditTrail() {
+            document.getElementById('setup-result').innerHTML = '<div class="status">⏳ Setting up audit trail...</div>';
+            
+            const result = await callAPI('/api/setup-audit-trail', { method: 'POST' });
+            showResult('setup-result', result, 'Audit Trail Setup');
+        }
+
+        async function initDatabase() {
+            document.getElementById('setup-result').innerHTML = '<div class="status">⏳ Initializing database...</div>';
+            
+            const result = await callAPI('/api/init-database', { method: 'POST' });
+            showResult('setup-result', result, 'Database Initialization');
+        }
+
+        async function testSuccessfulLogin() {
+            document.getElementById('login-result').innerHTML = '<div class="status">⏳ Testing successful login...</div>';
+            
+            const result = await callAPI('/api/auth/login', {
+                method: 'POST',
+                body: {
+                    email: 'admin@s4pd.gov.my',
+                    password: 'admin123'
+                }
+            });
+            showResult('login-result', result, 'Successful Login Test');
+        }
+
+        async function testFailedLogin() {
+            document.getElementById('login-result').innerHTML = '<div class="status">⏳ Testing failed login...</div>';
+            
+            const result = await callAPI('/api/auth/login', {
+                method: 'POST',
+                body: {
+                    email: 'admin@s4pd.gov.my',
+                    password: 'wrongpassword'
+                }
+            });
+            showResult('login-result', result, 'Failed Login Test');
+        }
+
+        async function loadAuditLogs() {
+            document.getElementById('audit-result').innerHTML = '<div class="status">⏳ Loading audit logs...</div>';
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            
+            const userEmail = document.getElementById('userEmailFilter').value;
+            const action = document.getElementById('actionFilter').value;
+            const dateFrom = document.getElementById('dateFromFilter').value;
+            const dateTo = document.getElementById('dateToFilter').value;
+            
+            if (userEmail) params.append('user_email', userEmail);
+            if (action) params.append('action', action);
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+            params.append('limit', '20');
+            
+            const result = await callAPI(`/api/get-audit-logs?${params.toString()}`);
+            
+            if (result.ok && result.data.status === 'success') {
+                displayAuditLogs(result.data.data);
+            } else {
+                showResult('audit-result', result, 'Load Audit Logs');
+            }
+        }
+
+        function displayAuditLogs(data) {
+            const statsHtml = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">${data.statistics.total_logs}</div>
+                        <div class="stat-label">Total Logs (7 days)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.statistics.login_logs}</div>
+                        <div class="stat-label">Login Attempts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.statistics.success_logs}</div>
+                        <div class="stat-label">Successful Actions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${data.statistics.failed_logs}</div>
+                        <div class="stat-label">Failed Actions</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('audit-stats').innerHTML = statsHtml;
+
+            let auditHtml = `
+                <h4>📋 Audit Logs (${data.total_count} total, Page ${data.current_page}/${data.total_pages})</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Table</th>
+                            <th>Status</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.audit_logs.forEach(log => {
+                auditHtml += `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        <td>${log.user_email}<br><small>${log.user_name || 'N/A'}</small></td>
+                        <td><strong>${log.action}</strong><br><small>${log.user_role || 'N/A'}</small></td>
+                        <td>${log.table_name || 'N/A'}</td>
+                        <td><span style="color: ${log.status === 'SUCCESS' ? 'green' : 'red'}">${log.status}</span></td>
+                        <td>${log.ip_address || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            auditHtml += '</tbody></table>';
+
+            // Add login attempts
+            auditHtml += `
+                <h4>🔐 Recent Login Attempts</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Email</th>
+                            <th>Success</th>
+                            <th>IP Address</th>
+                            <th>Failure Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.login_attempts.forEach(attempt => {
+                auditHtml += `
+                    <tr>
+                        <td>${new Date(attempt.timestamp).toLocaleString()}</td>
+                        <td>${attempt.email}</td>
+                        <td><span style="color: ${attempt.success ? 'green' : 'red'}">${attempt.success ? 'YES' : 'NO'}</span></td>
+                        <td>${attempt.ip_address || 'N/A'}</td>
+                        <td>${attempt.failure_reason || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            auditHtml += '</tbody></table>';
+
+            document.getElementById('audit-result').innerHTML = auditHtml;
+            document.getElementById('audit-result').closest('.test-section').className = 'test-section success';
+
+            // Display system events
+            let systemHtml = `
+                <h4>⚙️ System Events</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event Type</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Start Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.system_events.forEach(event => {
+                systemHtml += `
+                    <tr>
+                        <td><strong>${event.event_type}</strong></td>
+                        <td>${event.description}</td>
+                        <td><span style="color: ${event.status === 'COMPLETED' ? 'green' : 'orange'}">${event.status}</span></td>
+                        <td>${new Date(event.start_time).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            systemHtml += '</tbody></table>';
+            document.getElementById('system-events').innerHTML = systemHtml;
+        }
+
+        function clearFilters() {
+            document.getElementById('userEmailFilter').value = '';
+            document.getElementById('actionFilter').value = '';
+            document.getElementById('dateFromFilter').value = '';
+            document.getElementById('dateToFilter').value = '';
+        }
+
+        // Auto-load audit logs on page load
+        window.onload = function() {
+            console.log('🔍 Audit Trail Test Page Loaded');
+            // Set default date filter to last 7 days
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('dateFromFilter').value = weekAgo.toISOString().split('T')[0];
+            document.getElementById('dateToFilter').value = today.toISOString().split('T')[0];
+        };
+    </script>
+</body>
+</html>
