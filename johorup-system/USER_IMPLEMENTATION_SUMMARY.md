@@ -245,9 +245,8 @@ Operational User (Guru):
    - Advanced permissions granularity
 
 3. **Integration:**
-   - SSO dengan sistem MOE
-   - LDAP integration untuk authentication
    - API integration dengan sistem lain
+   - Database integration untuk data sync
 
 ---
 

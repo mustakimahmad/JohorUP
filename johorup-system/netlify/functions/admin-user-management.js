@@ -112,8 +112,8 @@ async function listAllUsers(client, headers) {
       p.name as ppd_name, p.code as ppd_code,
       s.name as school_name, s.code as school_code
     FROM users u
-    LEFT JOIN ppd p ON u.ppd_id = p.id
     LEFT JOIN schools s ON u.school_id = s.id
+    LEFT JOIN ppd p ON s.ppd_id = p.id
     ORDER BY u.created_at DESC
   `);
 

@@ -186,7 +186,6 @@ Sistem JohorUP adalah platform digital komprehensif yang direka untuk meningkatk
 ```
 
 ### 7.2 Integrasi Eksternal
-- **Google SSO**: Pilihan log masuk Google (dalam pembangunan)
 - **MOE Systems**: Integrasi dengan sistem KPM (dirancang)
 - **Third-party Tools**: API terbuka untuk integrasi masa depan
 
@@ -238,7 +237,6 @@ Sistem JohorUP adalah platform digital komprehensif yang direka untuk meningkatk
 - 🔄 Performance optimization
 
 ### 10.3 Fasa 3 (Dirancang)
-- 📋 Google SSO integration
 - 📋 Advanced analytics dan AI
 - 📋 Mobile application
 - 📋 Integration dengan sistem KPM

@@ -72,7 +72,6 @@
 ### **C. Integration Management**
 ```typescript
 // External system integrations
-- Configure Google SSO settings
 - Manage database connections
 - Set up backup schedules
 - Configure monitoring alerts
@@ -238,7 +237,6 @@
 - Configure MOE system integrations
 - Manage third-party services
 - Set up data synchronization
-- Configure SSO providers
 - Manage webhook endpoints
 - Monitor integration health
 ```

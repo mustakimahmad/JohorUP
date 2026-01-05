@@ -36,13 +36,11 @@ main() {
     log "=== Deploying JohorUP Updates to Netlify ==="
     echo ""
     
-    log "🚀 New Features Being Deployed:"
-    echo "  • MOE Domain-based Google SSO"
-    echo "  • Super Admin Dashboard"
-    echo "  • User Management System"
-    echo "  • Enhanced Security & Role-based Access"
-    echo "  • Pending Approval Workflow"
-    echo "  • Testing Framework"
+    log "🚀 System Updates Being Deployed:"
+    echo "  • Enhanced User Management System"
+    echo "  • Improved Security & Role-based Access"
+    echo "  • Database Authentication"
+    echo "  • Admin Dashboard Improvements"
     echo ""
     
     read -p "Continue with deployment? (y/N): " CONTINUE
@@ -95,27 +93,24 @@ main() {
         log "No changes to commit"
     else
         # Create comprehensive commit message
-        COMMIT_MSG="feat: Deploy MOE SSO + Super Admin system
+        COMMIT_MSG="feat: Deploy system improvements
 
-🆕 New Features:
-- MOE domain-based Google SSO (@moe-dl.edu.my, @moe.gov.my, @jcorp.com.my)
-- Super Admin dashboard with complete system control
-- User management system with approval workflow
-- Pending approval page for unauthorized domains
-- Enhanced security with role-based access control
-- Comprehensive testing framework (Phase 1)
+🆕 System Updates:
+- Enhanced user management system
+- Improved security with role-based access control
+- Database authentication improvements
+- Admin dashboard enhancements
+- Updated navigation and capabilities
 
 🔧 Technical Updates:
-- NextAuth.js integration for production SSO
-- Enhanced authentication with domain validation
-- Super Admin navigation and capabilities
-- Database schema updates for NextAuth
+- Enhanced authentication system
+- Database schema optimizations
 - Updated environment configuration
 - Mobile-responsive design improvements
+- Performance optimizations
 
 🎯 Benefits:
-- 50% faster login with Google SSO
-- Enhanced security with official MOE domains
+- Enhanced security with database authentication
 - Complete administrative control
 - Professional government-appropriate interface
 - Scalable user management system"
@@ -197,15 +192,10 @@ main() {
     echo "  □ Login page appears"
     echo "  □ Manual login works"
     echo ""
-    echo "✅ Google SSO (if configured):"
-    echo "  □ Google OAuth button appears"
-    echo "  □ OAuth consent screen loads"
-    echo "  □ Test accounts authenticate"
-    echo ""
-    echo "✅ Super Admin Features:"
-    echo "  □ Super Admin dashboard accessible"
+    echo "✅ Admin Features:"
+    echo "  □ Admin dashboard accessible"
     echo "  □ User management page works"
-    echo "  □ Navigation shows Super Admin menu"
+    echo "  □ Navigation shows admin menu"
     echo ""
     echo "✅ Security & Access:"
     echo "  □ Role-based menus work"
@@ -219,9 +209,8 @@ main() {
     success "Your JohorUP system updates are being deployed to Netlify!"
     echo ""
     log "📈 What's New:"
-    echo "  • Google SSO with MOE domain validation"
-    echo "  • Super Admin dashboard with system control"
-    echo "  • User management with approval workflow"
+    echo "  • Enhanced user management system"
+    echo "  • Improved admin dashboard"
     echo "  • Enhanced security and role-based access"
     echo "  • Professional government-appropriate interface"
     echo ""
@@ -237,7 +226,6 @@ main() {
     echo "  2. Set environment variables in Netlify dashboard"
     echo "  3. Run database updates in Neon console"
     echo "  4. Test all functionality after deployment"
-    echo "  5. Update Google Cloud Console with production URLs"
     echo ""
     
     success "Happy deploying! 🚀"
@@ -285,14 +273,6 @@ setup_env() {
     
     echo "📋 Required Environment Variables:"
     echo ""
-    echo "# Google OAuth"
-    echo "GOOGLE_CLIENT_ID=your-production-client-id.apps.googleusercontent.com"
-    echo "GOOGLE_CLIENT_SECRET=your-production-client-secret"
-    echo ""
-    echo "# NextAuth.js"
-    echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)"
-    echo "NEXTAUTH_URL=https://your-site.netlify.app"
-    echo ""
     echo "# Database (Neon)"
     echo "DATABASE_URL=postgresql://username:password@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
     echo "DATABASE_SSL=true"
@@ -302,9 +282,7 @@ setup_env() {
     echo "CLOUDINARY_API_KEY=your-api-key"
     echo "CLOUDINARY_API_SECRET=your-api-secret"
     echo ""
-    echo "# Feature Flags"
-    echo "ENABLE_GOOGLE_SSO=true"
-    echo "ENABLE_SUPER_ADMIN=true"
+    echo "# System Settings"
     echo "NODE_ENV=production"
     echo ""
     
@@ -315,7 +293,7 @@ setup_env() {
 show_help() {
     echo "JohorUP System - Netlify Deployment Script"
     echo ""
-    echo "Deploy all latest updates including MOE SSO and Super Admin features to Netlify."
+    echo "Deploy system improvements to Netlify."
     echo ""
     echo "Usage: $0 [command]"
     echo ""
@@ -326,12 +304,10 @@ show_help() {
     echo "  -h, --help Show this help message"
     echo ""
     echo "Features being deployed:"
-    echo "• MOE domain-based Google SSO"
-    echo "• Super Admin dashboard"
-    echo "• User management system"
+    echo "• Enhanced user management system"
+    echo "• Improved admin dashboard"
     echo "• Enhanced security & role-based access"
-    echo "• Pending approval workflow"
-    echo "• Testing framework"
+    echo "• Database authentication"
     echo ""
 }
 

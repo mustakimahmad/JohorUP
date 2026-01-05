@@ -59,8 +59,8 @@ exports.handler = async (event, context) => {
       const userResult = await client.query(
         `SELECT u.*, p.name as ppd_name, s.name as school_name 
          FROM users u
-         LEFT JOIN ppd p ON u.ppd_id = p.id
          LEFT JOIN schools s ON u.school_id = s.id
+         LEFT JOIN ppd p ON s.ppd_id = p.id
          WHERE u.email = $1`,
         [userEmail]
       );
@@ -231,7 +231,7 @@ async function getTeachersData(client, user, userRole) {
         SELECT u.*, s.name as school_name, p.name as ppd_name
         FROM users u
         LEFT JOIN schools s ON u.school_id = s.id
-        LEFT JOIN ppd p ON u.ppd_id = p.id
+        LEFT JOIN ppds p ON s.ppd_id = p.id
         WHERE u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school', 'tactical_ppd')
         ORDER BY u.name
       `;
@@ -244,8 +244,8 @@ async function getTeachersData(client, user, userRole) {
           SELECT u.*, s.name as school_name, p.name as ppd_name
           FROM users u
           LEFT JOIN schools s ON u.school_id = s.id
-          LEFT JOIN ppd p ON u.ppd_id = p.id
-          WHERE (u.ppd_id = $1 OR s.ppd_id = $1) 
+          LEFT JOIN ppds p ON s.ppd_id = p.id
+          WHERE s.ppd_id = $1 
           AND u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school')
           ORDER BY u.name
         `;
@@ -260,7 +260,7 @@ async function getTeachersData(client, user, userRole) {
           SELECT u.*, s.name as school_name, p.name as ppd_name
           FROM users u
           LEFT JOIN schools s ON u.school_id = s.id
-          LEFT JOIN ppd p ON u.ppd_id = p.id
+          LEFT JOIN ppds p ON s.ppd_id = p.id
           WHERE s.ppd_id = $1 AND u.role = 'operational_teacher' AND u.subject = $2
           ORDER BY u.name
         `;
@@ -275,7 +275,6 @@ async function getTeachersData(client, user, userRole) {
           SELECT u.*, s.name as school_name, p.name as ppd_name
           FROM users u
           LEFT JOIN schools s ON u.school_id = s.id
-          LEFT JOIN ppd p ON u.ppd_id = p.id
           WHERE u.school_id = $1 AND u.role = 'operational_teacher'
           ORDER BY u.subject, u.name
         `;
