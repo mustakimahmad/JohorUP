@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Database Structure - JohorUP</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .table-diagram { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin: 20px 0; }
+        .table-box { border: 2px solid #007bff; border-radius: 8px; background: white; min-width: 300px; }
+        .table-header { background: #007bff; color: white; padding: 10px; font-weight: bold; text-align: center; }
+        .table-field { padding: 8px 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .table-field:last-child { border-bottom: none; }
+        .field-name { font-weight: bold; color: #333; }
+        .field-type { color: #666; font-size: 12px; }
+        .primary-key { background: #fff3cd; border-left: 4px solid #ffc107; }
+        .foreign-key { background: #d1ecf1; border-left: 4px solid #17a2b8; }
+        .unique-field { background: #d4edda; border-left: 4px solid #28a745; }
+        .relationship-line { position: absolute; border-top: 2px solid #dc3545; }
+        .sample-data { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .sample-data table { width: 100%; border-collapse: collapse; }
+        .sample-data th, .sample-data td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        .sample-data th { background: #e9ecef; font-weight: bold; }
+        .hierarchy-diagram { background: #e9ecef; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        .hierarchy-level { margin: 10px 0; padding: 10px; background: white; border-radius: 5px; text-align: center; }
+        .level-1 { background: #007bff; color: white; }
+        .level-2 { background: #17a2b8; color: white; }
+        .level-3 { background: #28a745; color: white; }
+        .arrow { text-align: center; font-size: 24px; color: #666; margin: 5px 0; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; border-left: 4px solid #007bff; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+        .stat-label { font-size: 14px; color: #666; }
+        .code-block { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff; margin: 15px 0; }
+        .code-block pre { margin: 0; font-size: 14px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Struktur Database Murid - Sistem JohorUP</h1>
+        <p>Dokumentasi lengkap struktur database untuk pengurusan data murid</p>
+
+        <!-- Hierarchy Diagram -->
+        <div class="hierarchy-diagram">
+            <h3>🏗️ Hierarki Database</h3>
+            <div class="hierarchy-level level-1">
+                <strong>PPD</strong> (Pejabat Pendidikan Daerah)<br>
+                <small>PPD Johor Bahru, PPD Kluang, PPD Batu Pahat</small>
+            </div>
+            <div class="arrow">⬇️</div>
+            <div class="hierarchy-level level-2">
+                <strong>SCHOOLS</strong> (Sekolah)<br>
+                <small>SMK Taman Johor Jaya, SMK Kluang, SMK Batu Pahat</small>
+            </div>
+            <div class="arrow">⬇️</div>
+            <div class="hierarchy-level level-3">
+                <strong>STUDENTS</strong> (Murid)<br>
+                <small>Ahmad, Siti, Lim Wei Ming, Priya, Muhammad Faiz</small>
+            </div>
+        </div>
+
+        <!-- Database Tables Diagram -->
+        <h3>🗄️ Struktur Tabel Database</h3>
+        <div class="table-diagram">
+            <!-- PPD Table -->
+            <div class="table-box">
+                <div class="table-header">PPD Table</div>
+                <div class="table-field primary-key">
+                    <span class="field-name">id</span>
+                    <span class="field-type">UUID (PK)</span>
+                </div>
+                <div class="table-field unique-field">
+                    <span class="field-name">code</span>
+                    <span class="field-type">VARCHAR(20) UNIQUE</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">name</span>
+                    <span class="field-type">VARCHAR(255)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">district</span>
+                    <span class="field-type">VARCHAR(100)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">state</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">created_at</span>
+                    <span class="field-type">TIMESTAMP</span>
+                </div>
+            </div>
+
+            <!-- Schools Table -->
+            <div class="table-box">
+                <div class="table-header">SCHOOLS Table</div>
+                <div class="table-field primary-key">
+                    <span class="field-name">id</span>
+                    <span class="field-type">UUID (PK)</span>
+                </div>
+                <div class="table-field unique-field">
+                    <span class="field-name">code</span>
+                    <span class="field-type">VARCHAR(20) UNIQUE</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">name</span>
+                    <span class="field-type">VARCHAR(255)</span>
+                </div>
+                <div class="table-field foreign-key">
+                    <span class="field-name">ppd_id</span>
+                    <span class="field-type">UUID (FK → ppd.id)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">address</span>
+                    <span class="field-type">TEXT</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">phone</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">principal_name</span>
+                    <span class="field-type">VARCHAR(255)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">student_count</span>
+                    <span class="field-type">INTEGER</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">created_at</span>
+                    <span class="field-type">TIMESTAMP</span>
+                </div>
+            </div>
+
+            <!-- Students Table -->
+            <div class="table-box">
+                <div class="table-header">STUDENTS Table ⭐</div>
+                <div class="table-field primary-key">
+                    <span class="field-name">id</span>
+                    <span class="field-type">UUID (PK)</span>
+                </div>
+                <div class="table-field unique-field">
+                    <span class="field-name">ic_number</span>
+                    <span class="field-type">VARCHAR(20) UNIQUE</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">name</span>
+                    <span class="field-type">VARCHAR(255)</span>
+                </div>
+                <div class="table-field foreign-key">
+                    <span class="field-name">school_id</span>
+                    <span class="field-type">UUID (FK → schools.id)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">class_level</span>
+                    <span class="field-type">VARCHAR(10)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">class_name</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">gender</span>
+                    <span class="field-type">VARCHAR(10)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">race</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">religion</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">address</span>
+                    <span class="field-type">TEXT</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">parent_phone</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">tuition_status</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+                <div class="table-field">
+                    <span class="field-name">created_at</span>
+                    <span class="field-type">TIMESTAMP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div style="margin: 20px 0;">
+            <h4>🔑 Legend:</h4>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="table-field primary-key" style="width: 150px;">Primary Key (PK)</div>
+                <div class="table-field foreign-key" style="width: 150px;">Foreign Key (FK)</div>
+                <div class="table-field unique-field" style="width: 150px;">Unique Field</div>
+            </div>
+        </div>
+
+        <!-- Sample Data -->
+        <div class="sample-data">
+            <h3>📊 Contoh Data Murid</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>IC Number</th>
+                        <th>Nama Murid</th>
+                        <th>Sekolah</th>
+                        <th>Kelas</th>
+                        <th>Jantina</th>
+                        <th>Kaum</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>051234567890</td>
+                        <td>Ahmad Bin Abdullah</td>
+                        <td>SMK Taman Johor Jaya</td>
+                        <td>Form 4 4 Bestari</td>
+                        <td>Male</td>
+                        <td>Malay</td>
+                        <td>Active</td>
+                    </tr>
+                    <tr>
+                        <td>051234567891</td>
+                        <td>Siti Nurhaliza Binti Hassan</td>
+                        <td>SMK Taman Johor Jaya</td>
+                        <td>Form 4 4 Bestari</td>
+                        <td>Female</td>
+                        <td>Malay</td>
+                        <td>Active</td>
+                    </tr>
+                    <tr>
+                        <td>051234567892</td>
+                        <td>Lim Wei Ming</td>
+                        <td>SMK Taman Johor Jaya</td>
+                        <td>Form 4 4 Cemerlang</td>
+                        <td>Male</td>
+                        <td>Chinese</td>
+                        <td>Active</td>
+                    </tr>
+                    <tr>
+                        <td>051234567893</td>
+                        <td>Priya A/P Raman</td>
+                        <td>SMK Kluang</td>
+                        <td>Form 4 4 Bijak</td>
+                        <td>Female</td>
+                        <td>Indian</td>
+                        <td>Active</td>
+                    </tr>
+                    <tr>
+                        <td>051234567894</td>
+                        <td>Muhammad Faiz Bin Omar</td>
+                        <td>SMK Kluang</td>
+                        <td>Form 4 4 Bijak</td>
+                        <td>Male</td>
+                        <td>Malay</td>
+                        <td>Active</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Total PPD</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Total Sekolah</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Total Murid (Demo)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Kaum Berbeza</div>
+            </div>
+        </div>
+
+        <!-- SQL Examples -->
+        <h3>💻 Contoh Query SQL</h3>
+        
+        <div class="code-block">
+            <h4>1. Get All Students with School Info:</h4>
+            <pre>SELECT 
+  s.id,
+  s.ic_number,
+  s.name,
+  s.class_level,
+  s.class_name,
+  s.gender,
+  s.race,
+  sch.name as school_name,
+  ppd.name as ppd_name,
+  ppd.district
+FROM students s
+LEFT JOIN schools sch ON s.school_id = sch.id
+LEFT JOIN ppd ppd ON sch.ppd_id = ppd.id
+ORDER BY s.name;</pre>
+        </div>
+
+        <div class="code-block">
+            <h4>2. Get Students by School (Role-based Access):</h4>
+            <pre>SELECT s.*, sch.name as school_name
+FROM students s
+LEFT JOIN schools sch ON s.school_id = sch.id
+WHERE s.school_id = $user_school_id
+ORDER BY s.class_level, s.class_name, s.name;</pre>
+        </div>
+
+        <div class="code-block">
+            <h4>3. Count Students by Gender and Race:</h4>
+            <pre>SELECT 
+  gender,
+  race,
+  COUNT(*) as count
+FROM students
+GROUP BY gender, race
+ORDER BY count DESC;</pre>
+        </div>
+
+        <!-- Role-based Access -->
+        <h3>👥 Role-based Data Access</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div class="stat-card" style="text-align: left;">
+                <h4 style="color: #007bff; margin-top: 0;">Super Admin</h4>
+                <p><strong>Access:</strong> Semua murid di semua PPD</p>
+                <p><strong>Scope:</strong> Seluruh sistem</p>
+            </div>
+            <div class="stat-card" style="text-align: left;">
+                <h4 style="color: #17a2b8; margin-top: 0;">PPD User</h4>
+                <p><strong>Access:</strong> Murid dalam PPD mereka sahaja</p>
+                <p><strong>Scope:</strong> PPD specific</p>
+            </div>
+            <div class="stat-card" style="text-align: left;">
+                <h4 style="color: #28a745; margin-top: 0;">School Admin</h4>
+                <p><strong>Access:</strong> Murid dalam sekolah mereka sahaja</p>
+                <p><strong>Scope:</strong> School specific</p>
+            </div>
+            <div class="stat-card" style="text-align: left;">
+                <h4 style="color: #ffc107; margin-top: 0;">Teacher</h4>
+                <p><strong>Access:</strong> Murid dalam sekolah + subjek mereka</p>
+                <p><strong>Scope:</strong> School + Subject specific</p>
+            </div>
+        </div>
+
+        <!-- Field Descriptions -->
+        <h3>📋 Penjelasan Field Utama</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <div class="code-block">
+                <h4>🆔 Identifiers</h4>
+                <p><strong>id:</strong> UUID primary key unik</p>
+                <p><strong>ic_number:</strong> No. IC murid (UNIQUE)</p>
+                <p><strong>school_id:</strong> Foreign key ke schools table</p>
+            </div>
+            <div class="code-block">
+                <h4>👤 Personal Info</h4>
+                <p><strong>name:</strong> Nama penuh murid</p>
+                <p><strong>gender:</strong> Male/Female</p>
+                <p><strong>race:</strong> Malay/Chinese/Indian/Others</p>
+                <p><strong>religion:</strong> Islam/Buddha/Hindu/Kristian</p>
+            </div>
+            <div class="code-block">
+                <h4>🏫 Academic Info</h4>
+                <p><strong>class_level:</strong> Form 4/Form 5</p>
+                <p><strong>class_name:</strong> 4 Bestari/4 Cemerlang</p>
+                <p><strong>tuition_status:</strong> active/inactive/graduated</p>
+            </div>
+            <div class="code-block">
+                <h4>📞 Contact Info</h4>
+                <p><strong>address:</strong> Alamat rumah murid</p>
+                <p><strong>parent_phone:</strong> No. telefon ibu bapa</p>
+                <p><strong>created_at:</strong> Tarikh rekod dicipta</p>
+            </div>
+        </div>
+
+        <!-- Security & Privacy -->
+        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;">
+            <h4 style="color: #856404; margin-top: 0;">🔐 Security & Privacy</h4>
+            <ul style="color: #856404;">
+                <li><strong>IC Numbers:</strong> Sensitive data - access controlled by role</li>
+                <li><strong>Parent Contact:</strong> Restricted to school admin and above</li>
+                <li><strong>Address Information:</strong> Limited to authorized personnel</li>
+                <li><strong>Audit Trail:</strong> All data changes logged automatically</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+            <p>📚 Sistem JohorUP - Database Structure Documentation</p>
+            <p>Designed for Malaysian Education System with Security & Performance in Mind</p>
+        </div>
+    </div>
+</body>
+</html>
