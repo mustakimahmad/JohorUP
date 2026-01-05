@@ -125,7 +125,7 @@ exports.handler = async (event, context) => {
               SELECT u.*, s.name as school_name, p.name as ppd_name
               FROM users u
               LEFT JOIN schools s ON u.school_id = s.id
-              LEFT JOIN ppds p ON s.ppd_id = p.id
+              LEFT JOIN ppd p ON s.ppd_id = p.id
               WHERE s.ppd_id = $1 
               AND u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school')
               ORDER BY u.name
