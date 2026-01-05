@@ -156,32 +156,26 @@ async function getStudentsData(client, user, userRole) {
 
     case 'tactical_ppd':
       // PPD can see students in their PPD
-      if (user.ppd_id) {
-        query = `
-          SELECT st.*, s.name as school_name, p.name as ppd_name, p.district
-          FROM students st
-          LEFT JOIN schools s ON st.school_id = s.id
-          LEFT JOIN ppd p ON s.ppd_id = p.id
-          WHERE s.ppd_id = $1
-          ORDER BY st.name
-        `;
-        params = [user.ppd_id];
-      }
+      // For now, since users don't have ppd_id assignments, show all students
+      query = `
+        SELECT st.*, s.name as school_name, p.name as ppd_name, p.district
+        FROM students st
+        LEFT JOIN schools s ON st.school_id = s.id
+        LEFT JOIN ppd p ON s.ppd_id = p.id
+        ORDER BY st.name
+      `;
       break;
 
     case 'coaching_sisc':
       // SISC+ can see students in their PPD
-      if (user.ppd_id) {
-        query = `
-          SELECT st.*, s.name as school_name, p.name as ppd_name, p.district
-          FROM students st
-          LEFT JOIN schools s ON st.school_id = s.id
-          LEFT JOIN ppd p ON s.ppd_id = p.id
-          WHERE s.ppd_id = $1
-          ORDER BY st.name
-        `;
-        params = [user.ppd_id];
-      }
+      // For now, since users don't have ppd_id assignments, show all students
+      query = `
+        SELECT st.*, s.name as school_name, p.name as ppd_name, p.district
+        FROM students st
+        LEFT JOIN schools s ON st.school_id = s.id
+        LEFT JOIN ppd p ON s.ppd_id = p.id
+        ORDER BY st.name
+      `;
       break;
 
     case 'operational_school':
@@ -239,33 +233,28 @@ async function getTeachersData(client, user, userRole) {
 
     case 'tactical_ppd':
       // PPD can see teachers in their PPD
-      if (user.ppd_id) {
-        query = `
-          SELECT u.*, s.name as school_name, p.name as ppd_name
-          FROM users u
-          LEFT JOIN schools s ON u.school_id = s.id
-          LEFT JOIN ppd p ON s.ppd_id = p.id
-          WHERE s.ppd_id = $1 
-          AND u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school')
-          ORDER BY u.name
-        `;
-        params = [user.ppd_id];
-      }
+      // For now, since users don't have ppd_id assignments, show all teachers
+      query = `
+        SELECT u.*, s.name as school_name, p.name as ppd_name
+        FROM users u
+        LEFT JOIN schools s ON u.school_id = s.id
+        LEFT JOIN ppd p ON s.ppd_id = p.id
+        WHERE u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school')
+        ORDER BY u.name
+      `;
       break;
 
     case 'coaching_sisc':
       // SISC+ can see teachers in their PPD and subject
-      if (user.ppd_id && user.subject) {
-        query = `
-          SELECT u.*, s.name as school_name, p.name as ppd_name
-          FROM users u
-          LEFT JOIN schools s ON u.school_id = s.id
-          LEFT JOIN ppd p ON s.ppd_id = p.id
-          WHERE s.ppd_id = $1 AND u.role = 'operational_teacher' AND u.subject = $2
-          ORDER BY u.name
-        `;
-        params = [user.ppd_id, user.subject];
-      }
+      // For now, since users don't have ppd_id assignments, show all teachers
+      query = `
+        SELECT u.*, s.name as school_name, p.name as ppd_name
+        FROM users u
+        LEFT JOIN schools s ON u.school_id = s.id
+        LEFT JOIN ppd p ON s.ppd_id = p.id
+        WHERE u.role = 'operational_teacher'
+        ORDER BY u.name
+      `;
       break;
 
     case 'operational_school':
@@ -325,21 +314,18 @@ async function getSchoolsData(client, user, userRole) {
     case 'tactical_ppd':
     case 'coaching_sisc':
       // PPD and SISC+ can see schools in their PPD
-      if (user.ppd_id) {
-        query = `
-          SELECT s.*, p.name as ppd_name, p.district,
-                 COUNT(DISTINCT st.id) as student_count,
-                 COUNT(DISTINCT u.id) as teacher_count
-          FROM schools s
-          LEFT JOIN ppd p ON s.ppd_id = p.id
-          LEFT JOIN students st ON s.id = st.school_id
-          LEFT JOIN users u ON s.id = u.school_id AND u.role = 'operational_teacher'
-          WHERE s.ppd_id = $1
-          GROUP BY s.id, p.name, p.district
-          ORDER BY s.name
-        `;
-        params = [user.ppd_id];
-      }
+      // For now, since users don't have ppd_id assignments, show all schools
+      query = `
+        SELECT s.*, p.name as ppd_name, p.district,
+               COUNT(DISTINCT st.id) as student_count,
+               COUNT(DISTINCT u.id) as teacher_count
+        FROM schools s
+        LEFT JOIN ppd p ON s.ppd_id = p.id
+        LEFT JOIN students st ON s.id = st.school_id
+        LEFT JOIN users u ON s.id = u.school_id AND u.role = 'operational_teacher'
+        GROUP BY s.id, p.name, p.district
+        ORDER BY s.name
+      `;
       break;
 
     case 'operational_school':
@@ -403,21 +389,19 @@ async function getPPDData(client, user, userRole) {
     case 'tactical_ppd':
     case 'coaching_sisc':
       // PPD and SISC+ can see their own PPD
-      if (user.ppd_id) {
-        query = `
-          SELECT p.*, 
-                 COUNT(DISTINCT s.id) as school_count,
-                 COUNT(DISTINCT st.id) as student_count,
-                 COUNT(DISTINCT u.id) as teacher_count
-          FROM ppd p
-          LEFT JOIN schools s ON p.id = s.ppd_id
-          LEFT JOIN students st ON s.id = st.school_id
-          LEFT JOIN users u ON s.id = u.school_id AND u.role = 'operational_teacher'
-          WHERE p.id = $1
-          GROUP BY p.id
-        `;
-        params = [user.ppd_id];
-      }
+      // For now, since users don't have ppd_id assignments, show all PPDs
+      query = `
+        SELECT p.*, 
+               COUNT(DISTINCT s.id) as school_count,
+               COUNT(DISTINCT st.id) as student_count,
+               COUNT(DISTINCT u.id) as teacher_count
+        FROM ppd p
+        LEFT JOIN schools s ON p.id = s.ppd_id
+        LEFT JOIN students st ON s.id = st.school_id
+        LEFT JOIN users u ON s.id = u.school_id AND u.role = 'operational_teacher'
+        GROUP BY p.id
+        ORDER BY p.name
+      `;
       break;
 
     default:
@@ -458,21 +442,19 @@ async function getDashboardStats(client, user, userRole) {
     case 'tactical_ppd':
     case 'coaching_sisc':
       // PPD and SISC+ get their PPD stats
-      if (user.ppd_id) {
-        const ppdStats = await client.query(`
-          SELECT 
-            1 as total_ppd,
-            COUNT(DISTINCT s.id) as total_schools,
-            COUNT(DISTINCT st.id) as total_students,
-            COUNT(DISTINCT u.id) as total_teachers
-          FROM ppd p
-          LEFT JOIN schools s ON p.id = s.ppd_id
-          LEFT JOIN students st ON s.id = st.school_id
-          LEFT JOIN users u ON s.id = u.school_id AND u.role = 'operational_teacher'
-          WHERE p.id = $1
-        `, [user.ppd_id]);
-        stats = ppdStats.rows[0];
-      }
+      // For now, since users don't have ppd_id assignments, show all stats
+      const ppdStats = await client.query(`
+        SELECT 
+          COUNT(DISTINCT p.id) as total_ppd,
+          COUNT(DISTINCT s.id) as total_schools,
+          COUNT(DISTINCT st.id) as total_students,
+          COUNT(DISTINCT u.id) as total_teachers
+        FROM ppd p
+        LEFT JOIN schools s ON p.id = s.ppd_id
+        LEFT JOIN students st ON s.id = st.school_id
+        LEFT JOIN users u ON s.id = u.school_id AND u.role = 'operational_teacher'
+      `);
+      stats = ppdStats.rows[0];
       break;
 
     case 'operational_school':

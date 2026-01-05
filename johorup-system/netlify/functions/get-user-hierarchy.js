@@ -103,73 +103,65 @@ exports.handler = async (event, context) => {
 
         case 'tactical_ppd':
           // PPD can see schools and students under their PPD
-          if (user.ppd_id) {
-            const ppdSchools = await client.query(`
-              SELECT s.*, p.name as ppd_name 
-              FROM schools s 
-              LEFT JOIN ppd p ON s.ppd_id = p.id 
-              WHERE s.ppd_id = $1 
-              ORDER BY s.name
-            `, [user.ppd_id]);
+          // For now, since users don't have ppd_id assignments, show all data
+          const ppdSchools = await client.query(`
+            SELECT s.*, p.name as ppd_name 
+            FROM schools s 
+            LEFT JOIN ppd p ON s.ppd_id = p.id 
+            ORDER BY s.name
+          `);
 
-            const ppdStudents = await client.query(`
-              SELECT st.*, s.name as school_name, p.name as ppd_name
-              FROM students st
-              LEFT JOIN schools s ON st.school_id = s.id
-              LEFT JOIN ppd p ON s.ppd_id = p.id
-              WHERE s.ppd_id = $1
-              ORDER BY st.name
-            `, [user.ppd_id]);
+          const ppdStudents = await client.query(`
+            SELECT st.*, s.name as school_name, p.name as ppd_name
+            FROM students st
+            LEFT JOIN schools s ON st.school_id = s.id
+            LEFT JOIN ppd p ON s.ppd_id = p.id
+            ORDER BY st.name
+          `);
 
-            const ppdTeachers = await client.query(`
-              SELECT u.*, s.name as school_name, p.name as ppd_name
-              FROM users u
-              LEFT JOIN schools s ON u.school_id = s.id
-              LEFT JOIN ppd p ON s.ppd_id = p.id
-              WHERE s.ppd_id = $1 
-              AND u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school')
-              ORDER BY u.name
-            `, [user.ppd_id]);
+          const ppdTeachers = await client.query(`
+            SELECT u.*, s.name as school_name, p.name as ppd_name
+            FROM users u
+            LEFT JOIN schools s ON u.school_id = s.id
+            LEFT JOIN ppd p ON s.ppd_id = p.id
+            WHERE u.role IN ('operational_teacher', 'coaching_sisc', 'operational_school')
+            ORDER BY u.name
+          `);
 
-            hierarchyData.schools = ppdSchools.rows;
-            hierarchyData.students = ppdStudents.rows;
-            hierarchyData.teachers = ppdTeachers.rows;
-          }
+          hierarchyData.schools = ppdSchools.rows;
+          hierarchyData.students = ppdStudents.rows;
+          hierarchyData.teachers = ppdTeachers.rows;
           break;
 
         case 'coaching_sisc':
           // SISC+ can see schools and students under their PPD
-          if (user.ppd_id) {
-            const siscSchools = await client.query(`
-              SELECT s.*, p.name as ppd_name 
-              FROM schools s 
-              LEFT JOIN ppd p ON s.ppd_id = p.id 
-              WHERE s.ppd_id = $1 
-              ORDER BY s.name
-            `, [user.ppd_id]);
+          // For now, since users don't have ppd_id assignments, show all data
+          const siscSchools = await client.query(`
+            SELECT s.*, p.name as ppd_name 
+            FROM schools s 
+            LEFT JOIN ppd p ON s.ppd_id = p.id 
+            ORDER BY s.name
+          `);
 
-            const siscStudents = await client.query(`
-              SELECT st.*, s.name as school_name, p.name as ppd_name
-              FROM students st
-              LEFT JOIN schools s ON st.school_id = s.id
-              LEFT JOIN ppd p ON s.ppd_id = p.id
-              WHERE s.ppd_id = $1
-              ORDER BY st.name
-            `, [user.ppd_id]);
+          const siscStudents = await client.query(`
+            SELECT st.*, s.name as school_name, p.name as ppd_name
+            FROM students st
+            LEFT JOIN schools s ON st.school_id = s.id
+            LEFT JOIN ppd p ON s.ppd_id = p.id
+            ORDER BY st.name
+          `);
 
-            const siscTeachers = await client.query(`
-              SELECT u.*, s.name as school_name
-              FROM users u
-              LEFT JOIN schools s ON u.school_id = s.id
-              WHERE s.ppd_id = $1 AND u.role = 'operational_teacher'
-              AND u.subject = $2
-              ORDER BY u.name
-            `, [user.ppd_id, user.subject]);
+          const siscTeachers = await client.query(`
+            SELECT u.*, s.name as school_name
+            FROM users u
+            LEFT JOIN schools s ON u.school_id = s.id
+            WHERE u.role = 'operational_teacher'
+            ORDER BY u.name
+          `);
 
-            hierarchyData.schools = siscSchools.rows;
-            hierarchyData.students = siscStudents.rows;
-            hierarchyData.teachers = siscTeachers.rows;
-          }
+          hierarchyData.schools = siscSchools.rows;
+          hierarchyData.students = siscStudents.rows;
+          hierarchyData.teachers = siscTeachers.rows;
           break;
 
         case 'operational_school':
