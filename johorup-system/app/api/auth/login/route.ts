@@ -29,19 +29,20 @@ export async function POST(request: NextRequest) {
           SELECT u.*, s.name as school_name, p.name as ppd_name 
           FROM users u
           LEFT JOIN schools s ON u.school_id = s.id
-          LEFT JOIN ppds p ON u.ppd_id = p.id
-          WHERE u.email = $1 AND u.is_active = true
+          LEFT JOIN ppd p ON s.ppd_id = p.id
+          WHERE u.email = $1 AND u.status = 'active'
         `;
         
         const result = await client.query(userQuery, [email.toLowerCase()]);
         
         if (result.rows.length > 0) {
           const user = result.rows[0];
-          const isValidPassword = await bcrypt.compare(password, user.password_hash);
+          // For production, passwords are stored as plain text (not recommended for real production)
+          const isValidPassword = password === user.password;
           
           if (isValidPassword) {
             // Remove sensitive data
-            const { password_hash, ...userWithoutPassword } = user;
+            const { password: userPassword, ...userWithoutPassword } = user;
 
             // Log successful login
             await client.query(
