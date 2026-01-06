@@ -1,4 +1,5 @@
 // Get user hierarchy data based on role and permissions
+// Updated: 2026-01-06 - Fixed production schema compatibility
 exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
